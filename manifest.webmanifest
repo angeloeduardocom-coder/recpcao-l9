@@ -1,0 +1,17 @@
+{
+  "name": "Recepção L9 · Inspeção de recepção",
+  "short_name": "Recepção L9",
+  "description": "Inspeção de recepção de uva da Latitude 9, offline, com laudo em PDF para compartilhar no WhatsApp.",
+  "lang": "pt-BR",
+  "start_url": "./#lista",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#F3F4F5",
+  "theme_color": "#FFFFFF",
+  "icons": [
+    {"src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
+    {"src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any"},
+    {"src": "icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}
+  ]
+}

@@ -1,0 +1,1075 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Recepção L9</title>
+<meta name="theme-color" content="#FFFFFF" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#1C1F23" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Recepção L9">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" href="icons/favicon-32.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<script src="vendor/jspdf.umd.min.js"></script>
+<style>
+@font-face{font-family:"Jost";font-weight:400;font-display:swap;src:url(fonts/jost-latin-400-normal.woff2) format("woff2")}
+@font-face{font-family:"Jost";font-weight:500;font-display:swap;src:url(fonts/jost-latin-500-normal.woff2) format("woff2")}
+@font-face{font-family:"IBM Plex Sans";font-weight:400;font-display:swap;src:url(fonts/ibm-plex-sans-latin-400-normal.woff2) format("woff2")}
+@font-face{font-family:"IBM Plex Sans";font-weight:500;font-display:swap;src:url(fonts/ibm-plex-sans-latin-500-normal.woff2) format("woff2")}
+@font-face{font-family:"IBM Plex Sans";font-weight:600;font-display:swap;src:url(fonts/ibm-plex-sans-latin-600-normal.woff2) format("woff2")}
+@font-face{font-family:"IBM Plex Mono";font-weight:400;font-display:swap;src:url(fonts/ibm-plex-mono-latin-400-normal.woff2) format("woff2")}
+@font-face{font-family:"IBM Plex Mono";font-weight:500;font-display:swap;src:url(fonts/ibm-plex-mono-latin-500-normal.woff2) format("woff2")}
+
+/* Layout: app de campo offline, mobile-first. Barra com marca → lista local → formulário em seções → laudo em PDF → WhatsApp e OneDrive. */
+:root{
+  --bg:#F3F4F5; --surface:#FFFFFF; --sunken:#F8F8F9; --ink:#1E2124; --muted:#5F666D; --line:#E1E3E6;
+  --brand:#F58634; --brand-ink:#B4581A; --brand-soft:#FEF0E5; --on-brand:#FFFFFF;
+  --ok:#1D7F48; --ok-soft:#E3F3EA; --warn:#9A6400; --warn-soft:#FBF1DC; --bad:#BC3426; --bad-soft:#FBE7E4;
+  --shadow:0 1px 2px rgba(20,22,25,.06),0 2px 8px rgba(20,22,25,.04);
+  --f-display:"Jost","Avenir Next","Century Gothic",system-ui,sans-serif;
+  --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
+  --r:10px;
+}
+@media (prefers-color-scheme:dark){:root{
+  --bg:#141619; --surface:#1C1F23; --sunken:#181A1E; --ink:#ECEDEF; --muted:#9BA2AA; --line:#2C3036;
+  --brand:#F7924A; --brand-ink:#FFB57D; --brand-soft:#2E2117; --on-brand:#1A0F06;
+  --ok:#5BC98A; --ok-soft:#14291D; --warn:#E3B04F; --warn-soft:#2D2412; --bad:#F07B6E; --bad-soft:#331917;
+  --shadow:0 1px 2px rgba(0,0,0,.3); color-scheme:dark}}
+
+*{box-sizing:border-box}
+html,body{background:var(--bg)}
+body{margin:0;color:var(--ink);font:15px/1.5 var(--f-body);-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent;
+  padding-top:env(safe-area-inset-top,0px)}
+img{max-width:100%}
+[hidden]{display:none!important}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+.num{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:30;background:var(--surface)}
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--surface);border-bottom:1px solid var(--line)}
+.top-in{max-width:1080px;margin:0 auto;display:flex;align-items:center;gap:10px;height:58px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.logo{height:22px;width:auto;display:block}
+.top-tag{font:500 11px/1 var(--f-display);letter-spacing:.14em;text-transform:uppercase;color:var(--muted);padding-left:12px;border-left:1px solid var(--line);white-space:nowrap}
+.top-sp{flex:1}
+.icon-btn{position:relative;width:40px;height:40px;border-radius:8px;border:1px solid var(--line);background:var(--surface);display:grid;place-items:center;cursor:pointer;flex:none;text-decoration:none;color:var(--ink)}
+.icon-btn svg{width:20px;height:20px}
+.icon-btn .badge{position:absolute;top:-6px;right:-6px;min-width:20px;height:20px;padding:0 5px;border-radius:999px;background:var(--brand);color:var(--on-brand);font:600 11px/20px var(--f-mono);text-align:center}
+@media (max-width:600px){.top-tag{display:none}.logo{height:18px}#btn-new .btn-lbl{display:none}#btn-new{width:40px;padding:0}}
+.wrap{max-width:1080px;margin:0 auto;padding-block:20px 40px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:40px;padding:0 16px;border-radius:8px;
+  border:1px solid var(--line);background:var(--surface);cursor:pointer;font-weight:500;white-space:nowrap;transition:background .15s,border-color .15s;text-decoration:none;color:var(--ink)}
+.btn:hover{border-color:var(--muted)}
+.btn svg{width:18px;height:18px;flex:none}
+.btn.pri{background:var(--brand);border-color:var(--brand);color:var(--on-brand)}
+.btn.pri:hover{filter:brightness(.95)}
+.btn.ghost{border-color:transparent;background:transparent}
+.btn.ghost:hover{background:var(--sunken)}
+.btn.danger{color:var(--bad)}
+.btn.sm{height:34px;padding:0 12px;font-size:13px}
+.btn.lg{height:50px;font-size:16px;padding:0 22px}
+.btn[disabled]{opacity:.5;cursor:default}
+
+h1{font:500 26px/1.15 var(--f-display);margin:0;letter-spacing:-.01em;text-wrap:balance}
+h2{font:500 18px/1.2 var(--f-display);margin:0;letter-spacing:.005em}
+.eyebrow{font:500 11px/1 var(--f-display);letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.muted{color:var(--muted)}
+.notice{display:flex;gap:12px;align-items:center;flex-wrap:wrap;padding:12px 14px;border-radius:8px;background:var(--brand-soft);color:var(--brand-ink);font-size:14px;margin-bottom:16px}
+.notice p{margin:0;flex:1 1 240px}
+.notice.warn{background:var(--warn-soft);color:var(--warn)}
+
+/* LISTA */
+.head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:18px}
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;margin-bottom:18px}
+.kpi{background:var(--surface);padding:14px 16px;display:flex;flex-direction:column;gap:6px;min-width:0;text-decoration:none;color:inherit}
+.kpi b{font:500 22px/1 var(--f-mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+.kpi small{font-size:12px;color:var(--muted)}
+.kpi.go{background:var(--brand-soft)}
+.kpi.go b{color:var(--brand-ink)}
+@media (max-width:720px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.filters{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.search{flex:1 1 240px;position:relative}
+.search input{width:100%;height:40px;padding:0 12px 0 36px;border:1px solid var(--line);border-radius:8px;background:var(--surface)}
+.search svg{position:absolute;left:11px;top:11px;width:18px;height:18px;color:var(--muted)}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;background:var(--surface);padding:3px;gap:2px;max-width:100%;overflow-x:auto}
+.seg button{border:0;background:transparent;height:32px;padding:0 12px;border-radius:6px;cursor:pointer;font-size:13px;color:var(--muted);white-space:nowrap}
+.seg button[aria-pressed="true"]{background:var(--brand-soft);color:var(--brand-ink);font-weight:600}
+
+.list{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.row{display:grid;grid-template-columns:110px minmax(0,1.4fr) minmax(0,1fr) 92px 92px 72px 130px;gap:12px;align-items:center;
+  padding:12px 16px;border-top:1px solid var(--line);cursor:pointer;text-align:left;width:100%;background:none;border-left:0;border-right:0;border-bottom:0}
+.row:first-child{border-top:0}
+.row:hover{background:var(--sunken)}
+.row.th{cursor:default;font:500 11px/1 var(--f-display);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);background:var(--sunken)}
+.row .r{text-align:right}
+.cell-main b{display:block;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cell-main span{font-size:13px;color:var(--muted)}
+.date b{display:block;font:500 14px var(--f-mono)}
+.date span{font:12px var(--f-mono);color:var(--muted)}
+@media (max-width:820px){
+  .row{grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"main chip" "meta meta";row-gap:6px}
+  .row.th{display:none}.row .date{display:none}
+  .row .cell-main{grid-area:main}.row .chipc{grid-area:chip}
+  .row .m-meta{grid-area:meta;display:flex;flex-wrap:wrap;gap:4px 14px;font-size:13px;color:var(--muted)}
+  .row .d-only{display:none}
+}
+@media (min-width:821px){.m-meta{display:none}}
+.chip{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 9px;border-radius:999px;font-size:12px;font-weight:600;white-space:nowrap}
+.chip::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+.chip.ok{background:var(--ok-soft);color:var(--ok)}
+.chip.bad{background:var(--bad-soft);color:var(--bad)}
+.chip.warn{background:var(--warn-soft);color:var(--warn)}
+.chip.draft{background:var(--sunken);color:var(--muted);border:1px dashed var(--line)}
+.empty{padding:40px 20px;text-align:center;color:var(--muted)}
+.empty b{display:block;color:var(--ink);font:500 17px var(--f-display);margin-bottom:6px}
+.empty .btn{margin-top:14px}
+
+/* FORM */
+.form-head{display:flex;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap}
+.form-head .sp{flex:1}
+.saved{font-size:12px;color:var(--muted)}
+.steps{display:flex;gap:6px;overflow-x:auto;margin-bottom:16px;padding-bottom:2px;scrollbar-width:none}
+.steps a{flex:none;font-size:13px;text-decoration:none;color:var(--muted);padding:6px 12px;border-radius:999px;border:1px solid var(--line);background:var(--surface)}
+.sec{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);margin-bottom:16px;scroll-margin-top:calc(74px + env(safe-area-inset-top,0px))}
+.sec-h{display:flex;align-items:center;gap:12px;padding:14px 18px;border-bottom:1px solid var(--line)}
+.sec-h .n{width:26px;height:26px;border-radius:7px;background:var(--brand);color:var(--on-brand);display:grid;place-items:center;font:600 13px var(--f-mono);flex:none}
+.sec-b{padding:18px;display:grid;gap:16px}
+@media (max-width:480px){.sec-b{padding:14px}.sec-h{padding:12px 14px}}
+.grid{display:grid;gap:14px;grid-template-columns:repeat(auto-fill,minmax(170px,1fr))}
+.f{display:flex;flex-direction:column;gap:6px;min-width:0}
+.f label,.lbl{font-size:12px;font-weight:600;color:var(--muted);letter-spacing:.02em}
+.in{height:44px;padding:0 12px;border:1px solid var(--line);border-radius:8px;background:var(--sunken);width:100%;font-size:16px}
+.in:focus{background:var(--surface);border-color:var(--brand);outline:none}
+textarea.in{height:auto;min-height:84px;padding:10px 12px;resize:vertical;line-height:1.5}
+.unit{position:relative}
+.unit .in{padding-right:44px}
+.unit i{position:absolute;right:12px;top:0;height:44px;display:flex;align-items:center;font-style:normal;font-size:13px;color:var(--muted)}
+.calc{height:44px;display:flex;align-items:center;padding:0 12px;border-radius:8px;background:var(--brand-soft);color:var(--brand-ink);font:500 15px var(--f-mono)}
+.defects{display:grid;gap:12px}
+.defect{border:1px solid var(--line);border-radius:8px;padding:12px;display:grid;gap:12px;grid-template-columns:minmax(0,1fr) 130px 82px auto;align-items:end;background:var(--sunken)}
+.defect .pct{height:44px;display:flex;align-items:center;justify-content:flex-end;font:500 15px var(--f-mono)}
+.defect .photos{grid-column:1/-1}
+@media (max-width:620px){.defect{grid-template-columns:minmax(0,1fr) auto}.defect .f-nome{grid-column:1;grid-row:1}.defect .rm{grid-column:2;grid-row:1}.defect .f-kg{grid-column:1;grid-row:2}.defect .pct{grid-column:2;grid-row:2;min-width:64px}.defect .photos{grid-row:3}}
+.total-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;border-radius:8px;background:var(--brand);color:var(--on-brand);font-weight:600;flex-wrap:wrap}
+.total-bar .num{font-size:16px}
+.photos{display:flex;gap:8px;flex-wrap:wrap}
+.ph{position:relative;width:84px;height:84px;border-radius:8px;overflow:hidden;background:var(--line);flex:none}
+.ph img{width:100%;height:100%;object-fit:cover;display:block}
+.ph button{position:absolute;top:4px;right:4px;width:26px;height:26px;border-radius:50%;border:0;background:rgba(0,0,0,.6);color:#fff;cursor:pointer;display:grid;place-items:center;padding:0}
+.ph button svg{width:14px;height:14px}
+.ph.loading::after{content:"";position:absolute;inset:0;background:rgba(0,0,0,.35)}
+.ph.loading::before{content:"";position:absolute;left:50%;top:50%;width:20px;height:20px;margin:-10px;border:2px solid #fff;border-top-color:transparent;border-radius:50%;animation:sp .8s linear infinite;z-index:1}
+@keyframes sp{to{transform:rotate(360deg)}}
+.add-ph{width:84px;height:84px;border-radius:8px;border:1.5px dashed var(--line);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;color:var(--muted);font-size:11px;background:var(--surface);flex:none}
+.add-ph:hover{border-color:var(--brand);color:var(--brand-ink)}
+.add-ph svg{width:22px;height:22px}
+.add-ph input{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+.trio{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:20px 26px}
+@media (max-width:720px){.two{grid-template-columns:1fr}}
+.opt{display:flex;flex-wrap:wrap;gap:8px}
+.opt label{display:inline-flex;align-items:center;gap:8px;min-height:40px;padding:0 14px;border:1px solid var(--line);border-radius:8px;cursor:pointer;font-size:14px;background:var(--surface);user-select:none}
+.opt input{position:absolute;opacity:0;pointer-events:none}
+.opt label:has(input:checked){border-color:var(--brand);background:var(--brand-soft);color:var(--brand-ink);font-weight:600}
+.opt label:has(input:focus-visible){outline:2px solid var(--brand);outline-offset:2px}
+.opt.good label:has(input[value="Conforme"]:checked),.opt.good label:has(input[value="Não"]:checked){border-color:var(--ok);background:var(--ok-soft);color:var(--ok)}
+.opt.good label:has(input[value="Não conforme"]:checked),.opt.good label:has(input[value="Sim"]:checked){border-color:var(--bad);background:var(--bad-soft);color:var(--bad)}
+.opt.good label:has(input[value="Conforme com ressalva"]:checked){border-color:var(--warn);background:var(--warn-soft);color:var(--warn)}
+.parecer{display:grid;gap:16px;grid-template-columns:repeat(auto-fill,minmax(250px,1fr))}
+.add-row{display:flex;gap:8px}
+.add-row .in{flex:1;min-width:0}
+.sig{border:1px solid var(--line);border-radius:8px;background:#fff;position:relative;height:160px;touch-action:none}
+.sig canvas{width:100%;height:100%;display:block;cursor:crosshair;touch-action:none}
+.sig .line{position:absolute;left:24px;right:24px;bottom:34px;border-bottom:1px solid #C9CCD0;pointer-events:none}
+.sig .hint{position:absolute;left:24px;bottom:12px;font-size:12px;color:#8A9096;pointer-events:none}
+.sig-tools{display:flex;justify-content:flex-end;gap:8px}
+.bar{position:sticky;bottom:0;z-index:15;background:var(--surface);border-top:1px solid var(--line);
+  padding-block:12px calc(12px + env(safe-area-inset-bottom,0px))}
+.bar-in{max-width:1080px;margin:0 auto;display:flex;gap:10px;align-items:center;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.bar-in .sp{flex:1}
+.bar-in .msg{font-size:13px;color:var(--muted);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@media (max-width:560px){.bar-in .msg{display:none}.bar-in .sp{display:none}.bar-in .btn{flex:1;padding:0 10px}}
+
+/* LAUDO */
+.rep-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:16px}
+.rep-actions .sp{flex:1}
+.sheet{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow)}
+.sheet-top{display:flex;align-items:center;justify-content:space-between;gap:12px 16px;padding:22px 26px;border-bottom:3px solid var(--brand);flex-wrap:wrap}
+.sheet-top .code{text-align:right;font:500 12px/1.5 var(--f-mono);color:var(--muted)}
+.sheet-top .code b{color:var(--ink);font-size:13px}
+.sheet-title{padding:22px 26px 6px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.sheet-title h1{font-size:24px;letter-spacing:.02em}
+.id-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));margin:14px 26px 6px;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.id-grid div{padding:10px 12px;border-right:1px solid var(--line);border-bottom:1px solid var(--line);min-width:0}
+.id-grid div:nth-child(4n){border-right:0}
+.id-grid div:nth-last-child(-n+4){border-bottom:0}
+.id-grid small{display:block;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:2px}
+.id-grid b{font-weight:600;overflow-wrap:anywhere}
+.rs{padding:18px 26px}
+.rs-h{display:flex;align-items:center;justify-content:space-between;gap:2px 12px;flex-wrap:wrap;background:var(--brand);color:var(--on-brand);padding:8px 12px;border-radius:6px;font:500 15px var(--f-display);letter-spacing:.02em;margin-bottom:12px}
+.rs-h .num{font-size:14px;white-space:nowrap}
+@media (max-width:620px){
+  .id-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .id-grid div:nth-child(4n){border-right:1px solid var(--line)}.id-grid div:nth-child(2n){border-right:0}
+  .id-grid div:nth-last-child(-n+4){border-bottom:1px solid var(--line)}.id-grid div:nth-last-child(-n+2){border-bottom:0}
+  .sheet-top,.sheet-title,.rs{padding-left:16px;padding-right:16px}.id-grid{margin-left:16px;margin-right:16px}.sheet-top .code{text-align:left}
+}
+.tbl{width:100%;border-collapse:collapse;font-size:14px}
+.tbl td{padding:8px 4px;border-bottom:1px dotted var(--line)}
+.tbl td.v{text-align:right;font-family:var(--f-mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+.tbl td.bar-c{width:30%}
+.mini{height:6px;border-radius:3px;background:var(--sunken);overflow:hidden}
+.mini i{display:block;height:100%;background:var(--brand)}
+.rep-ph{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-top:12px}
+.rep-ph figure{margin:0}
+.rep-ph img{width:100%;aspect-ratio:3/4;object-fit:cover;border-radius:6px;display:block;background:var(--line)}
+.rep-ph figcaption{font-size:12px;color:var(--muted);margin-top:4px}
+.scale{display:flex;gap:10px}
+.scale div{flex:1;border:1px solid var(--line);border-radius:8px;padding:10px;text-align:center;min-width:0}
+.scale small{display:block;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+.scale b{font:500 22px var(--f-mono)}
+.scale .mid{border-color:var(--brand);background:var(--brand-soft)}
+.scale .mid b{color:var(--brand-ink)}
+.kv{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px 16px;font-size:14px;margin:0}
+.kv dt{color:var(--muted)}
+.kv dd{margin:0;text-align:right;font-weight:600;overflow-wrap:anywhere}
+.tags{display:flex;gap:6px;flex-wrap:wrap}
+.tag{font-size:13px;padding:4px 10px;border-radius:6px;background:var(--sunken);border:1px solid var(--line)}
+.sign{padding:26px;display:flex;flex-direction:column;align-items:center;gap:4px;border-top:1px solid var(--line)}
+.sign .sig-img{height:64px;display:flex;align-items:flex-end;justify-content:center}
+.sign .sig-img img{max-height:64px;background:#fff;border-radius:4px}
+.sign .ln{width:260px;max-width:100%;border-top:1px solid var(--ink);margin-top:2px}
+.sign b{font-size:14px}
+.sign span{font-size:13px;color:var(--muted)}
+.prose{font-size:14px;max-width:70ch;white-space:pre-wrap;margin:0}
+.confirm{display:inline-flex;align-items:center;gap:8px;padding:6px 6px 6px 12px;border-radius:8px;background:var(--bad-soft);color:var(--bad);font-size:13px;font-weight:500;flex-wrap:wrap}
+
+/* ENVIO */
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:20px;margin-bottom:16px}
+.send-hero{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:16px 24px;align-items:center}
+@media (max-width:620px){.send-hero{grid-template-columns:1fr}.send-hero .btn{width:100%}}
+.flow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:13px;color:var(--muted);margin-top:8px}
+.flow b{color:var(--ink);font-weight:600}
+.flow svg{width:14px;height:14px;color:var(--brand)}
+.q{display:grid;gap:0;margin-top:4px}
+.qi{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 12px;align-items:center;padding:12px 0;border-top:1px solid var(--line)}
+.qi:first-child{border-top:0}
+.qi b{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.qi small{color:var(--muted);font-size:13px;grid-column:1}
+.qi .st{grid-row:1/3;grid-column:2;font-size:13px;font-weight:600;white-space:nowrap}
+.st.wait{color:var(--muted)}.st.run{color:var(--brand-ink)}.st.done{color:var(--ok)}.st.err{color:var(--bad)}
+.prog{height:4px;border-radius:2px;background:var(--sunken);overflow:hidden;grid-column:1/-1}
+.prog i{display:block;height:100%;width:0;background:var(--brand);transition:width .2s}
+.meter{height:8px;border-radius:4px;background:var(--sunken);overflow:hidden;margin-top:8px}
+.meter i{display:block;height:100%;background:var(--brand)}
+.cfg{display:grid;gap:14px;max-width:520px}
+.qi.sel{grid-template-columns:auto minmax(0,1fr);column-gap:14px}
+.qi.sel input{width:22px;height:22px;accent-color:var(--brand);grid-row:1/4;margin:0}
+.qi.sel b{grid-column:2}.qi.sel small{grid-column:2;grid-row:2}.qi.sel .st{grid-column:2;grid-row:3;font-size:12px}
+.qi label{display:contents;cursor:pointer}
+.after{display:flex;gap:10px 14px;align-items:center;flex-wrap:wrap;padding:14px 16px;border-radius:var(--r);background:var(--ok-soft);color:var(--ok);margin-bottom:16px;font-size:14px}
+.after p{margin:0;flex:1 1 260px;color:var(--ink)}
+.after b{color:var(--ok)}
+.shared{color:var(--ok);font-weight:600}
+.envio{display:grid;gap:0;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);margin-bottom:16px;overflow:hidden}
+.passo{display:grid;grid-template-columns:30px minmax(0,1fr) auto;gap:4px 12px;align-items:center;padding:14px 16px;border-top:1px solid var(--line)}
+.passo:first-child{border-top:0}
+.passo .n{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font:600 13px var(--f-mono);background:var(--sunken);border:1px solid var(--line);color:var(--muted)}
+.passo.ok .n{background:var(--ok);border-color:var(--ok);color:var(--surface)}
+.passo b{display:block;font-weight:600}
+.passo small{display:block;color:var(--muted);font-size:13px}
+.passo.ok small{color:var(--ok)}
+.passo .btn{min-width:112px}
+.passo.fim{background:var(--sunken)}
+.passo.fim .n{background:transparent;border-style:dashed}
+@media (max-width:420px){.passo{grid-template-columns:30px minmax(0,1fr)}.passo .btn{grid-column:2;justify-self:start;margin-top:6px}}
+.howto{font-size:14px;margin:0;padding-left:20px;display:grid;gap:6px}
+
+.toast{position:fixed;left:50%;bottom:calc(88px + env(safe-area-inset-bottom,0px));transform:translateX(-50%) translateY(20px);opacity:0;background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:8px;font-size:14px;z-index:50;transition:.2s;pointer-events:none;max-width:calc(100% - 32px);text-align:center}
+.toast.on{opacity:1;transform:translateX(-50%)}
+.upd{position:sticky;top:calc(58px + env(safe-area-inset-top,0px));z-index:19;background:var(--brand);color:var(--on-brand)}
+.upd-in{max-width:1080px;margin:0 auto;display:flex;align-items:center;gap:10px 14px;flex-wrap:wrap;padding-block:10px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));font-size:14px;font-weight:500}
+.upd-in span{flex:1 1 200px}
+.upd .btn{background:var(--on-brand);color:var(--brand);border-color:var(--on-brand);height:34px;font-size:13px}
+.foot{text-align:center;font-size:12px;color:var(--muted);padding-block:8px calc(24px + env(safe-area-inset-bottom,0px))}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<header class="top"><div class="top-in">
+  <a href="#lista" aria-label="Início"><img class="logo" id="logo" alt="Latitude 9" src="icons/logo.png"></a>
+  <span class="top-tag">Recepção · Qualidade</span>
+  <span class="top-sp"></span>
+  <a class="icon-btn" href="#config" aria-label="Configurações"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 00.3 1.8l.1.1a2 2 0 11-2.8 2.8l-.1-.1a1.7 1.7 0 00-1.8-.3 1.7 1.7 0 00-1 1.5V21a2 2 0 11-4 0v-.1a1.7 1.7 0 00-1.1-1.5 1.7 1.7 0 00-1.8.3l-.1.1a2 2 0 11-2.8-2.8l.1-.1a1.7 1.7 0 00.3-1.8 1.7 1.7 0 00-1.5-1H3a2 2 0 110-4h.1a1.7 1.7 0 001.5-1.1 1.7 1.7 0 00-.3-1.8l-.1-.1a2 2 0 112.8-2.8l.1.1a1.7 1.7 0 001.8.3H9a1.7 1.7 0 001-1.5V3a2 2 0 114 0v.1a1.7 1.7 0 001 1.5 1.7 1.7 0 001.8-.3l.1-.1a2 2 0 112.8 2.8l-.1.1a1.7 1.7 0 00-.3 1.8V9a1.7 1.7 0 001.5 1H21a2 2 0 110 4h-.1a1.7 1.7 0 00-1.5 1z"/></svg></a>
+  <a class="icon-btn" href="#compartilhar" aria-label="Enviar inspeções"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V4M8 8l4-4 4 4M5 13v6a1 1 0 001 1h12a1 1 0 001-1v-6"/></svg><span class="badge" id="badge" hidden></span></a>
+  <button class="btn pri" id="btn-new" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg><span class="btn-lbl">Nova inspeção</span></button>
+</div></header>
+
+<div class="upd" id="upd" hidden role="status"><div class="upd-in"><span>Nova versão do app disponível.</span><button class="btn" type="button" id="upd-btn">Atualizar agora</button></div></div>
+<main class="wrap" id="view"><div class="empty"><b>Abrindo…</b></div></main>
+<div id="bar-slot"></div>
+<p class="foot" id="foot"></p>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(() => {
+'use strict';
+const $ = (s, el = document) => el.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const num = v => {
+  if (v === '' || v == null) return null; let s = String(v).trim().replace(/\s/g, '');
+  if (s.includes(',')) s = s.replace(/\./g, '').replace(',', '.');
+  else if (/^[1-9]\d{0,2}(\.\d{3})+$/.test(s)) s = s.replace(/\./g, '');
+  const n = parseFloat(s); return isFinite(n) ? n : null;
+};
+const fmt = (n, d = 2) => n == null || !isFinite(n) ? '—' : n.toLocaleString('pt-BR', {minimumFractionDigits: d, maximumFractionDigits: d});
+const fmtI = n => n == null ? '—' : n.toLocaleString('pt-BR', {maximumFractionDigits: 2});
+const pad = n => String(n).padStart(2, '0');
+const pctTxt = v => v == null || !isFinite(v) ? '—' : fmt(v) + '%';
+const mb = b => b == null ? '—' : (b / 1048576).toLocaleString('pt-BR', {maximumFractionDigits: b < 10485760 ? 1 : 0}) + ' MB';
+const ICON = {
+  x: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>',
+  cam: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>',
+  search: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>',
+  back: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>',
+  pdf: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>',
+  share: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V4M8 8l4-4 4 4M5 13v6a1 1 0 001 1h12a1 1 0 001-1v-6"/></svg>',
+  edit: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9l-4-4L4 16z"/></svg>',
+  trash: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>',
+  plus: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
+  arrow: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>'
+};
+const DEFEITOS_PADRAO = ['Podridão ácida', 'Mosca da fruta', 'Rachadura', 'Manchas'];
+const OCORRENCIAS = ['Baga podre','Baga rachada','Bagas e cachos murchos','Cicatrizes','Cochonilha','Baga amassada','Cachos com coloração clara','Cachos compactados','Problemas de limpeza','Baga murcha','Degrana excessiva'];
+const UNIDADES = ['Contentor','Caixa','Bin','Palete'];
+const MESES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+
+const VERSAO_APP = '1.5', VERSAO_DATA = '29/10/2026';
+$('#foot').textContent = '© ' + new Date().getFullYear() + ' Ângelo Eduardo. Todos os direitos reservados. · Versão ' + VERSAO_APP;
+let toastT;
+function toast(msg, ms = 2800) { const t = $('#toast'); t.textContent = msg; t.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('on'), ms); }
+
+/* ---------- Banco local (IndexedDB) ---------- */
+let idb;
+function openDB() {
+  return new Promise((res, rej) => {
+    const r = indexedDB.open('recepcao-l9', 1);
+    r.onupgradeneeded = () => { const d = r.result;
+      d.createObjectStore('inspecoes', {keyPath: 'id'}); d.createObjectStore('fotos');
+      d.createObjectStore('enviadas', {keyPath: 'id'}); d.createObjectStore('config'); };
+    r.onsuccess = () => res(idb = r.result); r.onerror = () => rej(r.error);
+  });
+}
+function req(store, mode, fn) {
+  return new Promise((res, rej) => { const tx = idb.transaction(store, mode); const st = tx.objectStore(store); const r = fn(st);
+    tx.oncomplete = () => res(r?.result); tx.onerror = () => rej(tx.error); tx.onabort = () => rej(tx.error || new Error('Sem espaço no aparelho')); });
+}
+const dbAll = s => req(s, 'readonly', st => st.getAll());
+const dbGet = (s, k) => req(s, 'readonly', st => st.get(k));
+const dbPut = (s, v, k) => req(s, 'readwrite', st => k === undefined ? st.put(v) : st.put(v, k));
+const dbDel = (s, k) => req(s, 'readwrite', st => st.delete(k));
+const dbKeys = s => req(s, 'readonly', st => st.getAllKeys());
+
+let inspecoes = [], enviadas = [], cfg = {};
+async function carregar() {
+  inspecoes = await dbAll('inspecoes'); enviadas = await dbAll('enviadas');
+  inspecoes.sort((a, b) => String(b.dataHora || '').localeCompare(String(a.dataHora || '')));
+  enviadas.sort((a, b) => String(b.enviadoEm).localeCompare(String(a.enviadoEm)));
+  cfg = (await dbGet('config', 'cfg')) || {};
+  const n = inspecoes.filter(pendente).length; const b = $('#badge'); b.hidden = !n; b.textContent = n;
+}
+async function salvarCfg() { await dbPut('config', cfg, 'cfg'); }
+
+/* ---------- Fotos ---------- */
+const urls = new Map();
+async function urlFoto(id) {
+  if (!id) return ''; if (urls.has(id)) return urls.get(id);
+  const b = await dbGet('fotos', id); if (!b) return ''; const u = URL.createObjectURL(b); urls.set(id, u); return u;
+}
+function fotosDe(r) {
+  const ids = []; const add = l => (l || []).forEach(f => f?.id && ids.push(f.id));
+  (r.defeitos || []).forEach(d => add(d.fotos)); add(r.diametro?.fotos); add(r.brix?.fotos); add(r.degrana?.fotos); add(r.corpoEstranho?.fotos); add(r.fotosGerais);
+  if (r.assinatura?.id) ids.push(r.assinatura.id); return ids;
+}
+const preUrls = r => Promise.all(fotosDe(r).map(urlFoto));
+const src = f => urls.get(f?.id) || '';
+async function limparOrfas(extra = []) {
+  const usadas = new Set(extra); inspecoes.forEach(r => fotosDe(r).forEach(i => usadas.add(i)));
+  for (const k of await dbKeys('fotos')) if (!usadas.has(k)) { await dbDel('fotos', k); if (urls.has(k)) { URL.revokeObjectURL(urls.get(k)); urls.delete(k); } }
+}
+function compress(file, max = 1600, q = .8) {
+  return new Promise((res, rej) => {
+    const u = URL.createObjectURL(file); const img = new Image();
+    img.onload = () => { const s = Math.min(1, max / Math.max(img.width, img.height)); const c = document.createElement('canvas');
+      c.width = Math.round(img.width * s); c.height = Math.round(img.height * s); c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+      URL.revokeObjectURL(u); c.toBlob(b => b ? res(b) : rej(new Error('falha ao processar')), 'image/jpeg', q); };
+    img.onerror = () => { URL.revokeObjectURL(u); rej(new Error('imagem inválida')); }; img.src = u;
+  });
+}
+const novoId = p => p + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+async function guardarFoto(blob) { const id = novoId('f'); await dbPut('fotos', blob, id); urls.set(id, URL.createObjectURL(blob)); return {id}; }
+
+/* ---------- Modelo ---------- */
+function novoCodigo(d) { return 'IR-' + String(d.getFullYear()).slice(2) + pad(d.getMonth() + 1) + pad(d.getDate()) + '-' + pad(d.getHours()) + pad(d.getMinutes()) + pad(d.getSeconds()); }
+function localISO(d) { return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + 'T' + pad(d.getHours()) + ':' + pad(d.getMinutes()); }
+function nova() {
+  const d = new Date();
+  return { id: novoId('i'), codigo: novoCodigo(d), status: 'rascunho', dataHora: localISO(d), produtor: '', variedade: '', parcela: '',
+    qtdeRecebida: null, unidade: 'Contentor', pesoMedio: null, unAnalisadas: null,
+    defeitos: DEFEITOS_PADRAO.map(n => ({nome: n, kg: null, fotos: []})),
+    diametro: {min: null, med: null, max: null, fotos: []}, brix: {min: null, med: null, max: null, fotos: []},
+    degrana: {kg: null, fotos: []}, corpoEstranho: {presente: 'Não', descricao: '', fotos: []}, outros: '', fotosGerais: [],
+    parecer: {brix: '', coloracao: '', pesoAvaliado: '', condicao: '', devolucao: ''},
+    ocorrencias: [], consideracoes: '', observacoes: '', avaliador: cfg.avaliador || '', assinatura: null, criadoEm: d.toISOString() };
+}
+const totalAnalisado = r => (r.pesoMedio != null && r.unAnalisadas != null) ? r.pesoMedio * r.unAnalisadas : null;
+const pct = (kg, r) => { const t = totalAnalisado(r); return (kg != null && t) ? kg / t * 100 : null; };
+const somaDef = r => (r.defeitos || []).reduce((s, d) => s + (d.kg || 0), 0);
+function condChip(r) {
+  if (r.status !== 'concluida') return '<span class="chip draft">Rascunho</span>';
+  const c = r.parecer?.condicao;
+  if (c === 'Conforme') return '<span class="chip ok">Conforme</span>';
+  if (c === 'Não conforme') return '<span class="chip bad">Não conforme</span>';
+  if (c === 'Conforme com ressalva') return '<span class="chip warn">Com ressalva</span>';
+  return '<span class="chip draft">Sem parecer</span>';
+}
+function dt(r) { const s = r.dataHora || ''; const [d, t] = s.split('T'); if (!d) return {d: '—', t: ''}; const [y, m, dd] = d.split('-'); return {d: dd + '/' + m + '/' + y, t: (t || '').slice(0, 5), y, m}; }
+const quando = iso => { if (!iso) return '—'; const d = new Date(iso); return pad(d.getDate()) + '/' + pad(d.getMonth() + 1) + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes()); };
+
+/* ---------- Rotas ---------- */
+let editing = null, filtro = {q: '', st: 'todas'}, ocupado = false;
+window.addEventListener('hashchange', route);
+$('#btn-new').onclick = () => { location.hash = 'nova'; };
+async function route() {
+  const h = location.hash.slice(1);
+  $('#bar-slot').innerHTML = '';
+  if (h === 'nova') { if (!editing || !editing.__new) { editing = nova(); editing.__new = true; editing.__dirty = false; } return renderForm(); }
+  if (h.startsWith('editar-')) {
+    const id = h.slice(7);
+    if (!editing || editing.id !== id) { const r = inspecoes.find(x => x.id === id); if (!r) return (location.hash = 'lista'); editing = structuredClone(r); }
+    await preUrls(editing); return renderForm();
+  }
+  if (editing) { await descartarEdicao(); }
+  scrollTo(0, 0);
+  if (h.startsWith('laudo-')) { const r = inspecoes.find(x => x.id === h.slice(6)); if (r) { await preUrls(r); return renderLaudo(r); } }
+  if (h === 'compartilhar' || h === 'enviar') return renderCompartilhar();
+  if (h === 'config') return renderConfig();
+  renderLista();
+}
+async function descartarEdicao() {
+  const e = editing; editing = null;
+  if (e && e.status === 'rascunho' && e.__dirty) await salvar(e, false); // rascunho é salvo sempre
+  await carregar(); await limparOrfas();
+}
+
+/* ---------- Instalação ---------- */
+let installEvt = null;
+window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); installEvt = e; if (!location.hash || location.hash === '#lista') renderLista(); });
+const instalado = () => matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+const ehIOS = () => /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+function avisoInstalar() {
+  if (instalado() || cfg.ocultarInstalar) return '';
+  const txt = ehIOS() ? 'Instale o app: toque em <b>Compartilhar</b> e depois em <b>Adicionar à Tela de Início</b>. Assim as inspeções ficam guardadas com segurança no iPhone.'
+    : installEvt ? 'Instale o app na tela inicial para usar sem internet e abrir mais rápido.' : 'Instale o app: no menu ⋮ do Chrome, toque em <b>Adicionar à tela inicial</b>.';
+  return `<div class="notice"><p>${txt}</p>${installEvt ? '<button class="btn pri sm" type="button" id="b-install">Instalar</button>' : ''}<button class="btn ghost sm" type="button" id="b-noinst">Agora não</button></div>`;
+}
+function bindInstalar() {
+  const b = $('#b-install'); if (b) b.onclick = async () => { installEvt.prompt(); await installEvt.userChoice.catch(() => {}); installEvt = null; renderLista(); };
+  const n = $('#b-noinst'); if (n) n.onclick = async () => { cfg.ocultarInstalar = true; await salvarCfg(); renderLista(); };
+}
+
+/* ---------- Lista ---------- */
+async function usoAparelho() { try { const e = await navigator.storage.estimate(); return e; } catch { return null; } }
+async function renderLista() {
+  $('#btn-new').hidden = false;
+  const prontas = inspecoes.filter(pendente).length, rasc = inspecoes.filter(r => r.status !== 'concluida').length;
+  $('#view').innerHTML = `${avisoInstalar()}
+    <div class="head"><div><div class="eyebrow">Controle de qualidade · N.F.QUAL.001</div><h1>Inspeções de recepção</h1></div></div>
+    <div class="kpis">
+      <a class="kpi ${prontas ? 'go' : ''}" href="#compartilhar"><small>Para enviar</small><b>${prontas}</b></a>
+      <div class="kpi"><small>Rascunhos</small><b>${rasc}</b></div>
+      <div class="kpi"><small>Espaço usado no celular</small><b id="k-uso">…</b></div>
+      <div class="kpi"><small>Último envio</small><b style="font-size:17px">${ultimoComp() ? quando(ultimoComp()) : '—'}</b></div>
+    </div>
+    <div class="filters">
+      <div class="search">${ICON.search}<input id="q" type="search" placeholder="Buscar produtor, variedade, parcela ou código" value="${esc(filtro.q)}"></div>
+      <div class="seg" role="group" aria-label="Filtrar">
+        ${[['todas','Todas'],['concluida','Prontas'],['rascunho','Rascunhos']].map(([v,l]) => `<button type="button" data-st="${v}" aria-pressed="${filtro.st === v}">${l}</button>`).join('')}
+      </div>
+    </div>
+    <div class="list" id="list"></div>`;
+  bindInstalar();
+  $('#q').oninput = e => { filtro.q = e.target.value; drawRows(); };
+  $('#view').querySelectorAll('[data-st]').forEach(b => b.onclick = () => { filtro.st = b.dataset.st; $('#view').querySelectorAll('[data-st]').forEach(x => x.setAttribute('aria-pressed', x === b)); drawRows(); });
+  drawRows();
+  const e = await usoAparelho(); const k = $('#k-uso'); if (k) k.textContent = e ? mb(e.usage) : '—';
+}
+function drawRows() {
+  const q = filtro.q.trim().toLowerCase();
+  const rows = inspecoes.filter(r => (filtro.st === 'todas' || r.status === filtro.st) && (!q || [r.produtor, r.variedade, r.parcela, r.codigo].some(v => String(v || '').toLowerCase().includes(q))));
+  const el = $('#list');
+  if (!rows.length) {
+    el.innerHTML = inspecoes.length ? '<div class="empty"><b>Nenhuma inspeção encontrada</b>Ajuste a busca ou o filtro.</div>'
+      : `<div class="empty"><b>Nenhuma inspeção no celular</b>${enviadas.length ? 'Tudo já foi compartilhado. ' : ''}Registre a próxima carga recebida.<br><button class="btn pri" type="button" id="e-new">${ICON.plus}Nova inspeção</button></div>`;
+    const b = $('#e-new'); if (b) b.onclick = () => { location.hash = 'nova'; };
+    return;
+  }
+  el.innerHTML = `<div class="row th"><span>Data</span><span>Produtor · Variedade</span><span>Parcela</span><span class="r">Defeitos</span><span class="r">Degrana</span><span class="r">Brix</span><span>Condição</span></div>` +
+    rows.map(r => { const d = dt(r); const pd = pct(somaDef(r), r), pg = pct(r.degrana?.kg, r);
+      return `<button class="row" type="button" data-id="${esc(r.id)}">
+        <span class="date"><b>${d.d}</b><span>${d.t}</span></span>
+        <span class="cell-main"><b>${esc(r.produtor || 'Sem produtor')}</b><span>${esc(r.variedade || '—')} · ${esc(r.codigo)}${r.status === 'concluida' ? (pendente(r) ? (r.compartilhadaEm || r.onedriveEm ? ' · <span class="shared">envio pela metade</span>' : '') : ' · <span class="shared">✓ enviada</span>') : ''}</span></span>
+        <span class="d-only num">${esc(r.parcela || '—')}</span>
+        <span class="d-only r num">${fmt(pd)}%</span><span class="d-only r num">${fmt(pg)}%</span><span class="d-only r num">${fmtI(r.brix?.med)}</span>
+        <span class="chipc">${condChip(r)}</span>
+        <span class="m-meta"><span>${d.d} ${d.t}</span><span>Def. <b class="num">${fmt(pd)}%</b></span><span>Degr. <b class="num">${fmt(pg)}%</b></span><span>Brix <b class="num">${fmtI(r.brix?.med)}</b></span></span>
+      </button>`; }).join('');
+  el.querySelectorAll('.row[data-id]').forEach(b => b.onclick = () => { const r = inspecoes.find(x => x.id === b.dataset.id); location.hash = (r && r.status !== 'concluida' ? 'editar-' : 'laudo-') + b.dataset.id; });
+}
+
+/* ---------- Formulário ---------- */
+let pendentes = 0, autoT;
+function photosHTML(path, list) {
+  return `<div class="photos" data-path="${path}">${(list || []).map((f, i) => `<div class="ph"><img alt="" src="${esc(src(f))}"><button type="button" aria-label="Remover foto" data-rm="${i}">${ICON.x}</button></div>`).join('')}
+    <label class="add-ph">${ICON.cam}<span>Foto</span><input type="file" accept="image/*" multiple></label></div>`;
+}
+const getPath = (o, p) => p.split('.').reduce((o, k) => o?.[k], o);
+function setPath(o, p, v) { const ks = p.split('.'); const last = ks.pop(); ks.reduce((o, k) => o[k], o)[last] = v; }
+const radios = (name, opts, val, cls = '') => `<div class="opt ${cls}" role="radiogroup">${opts.map(o => `<label><input type="radio" name="${name}" value="${esc(o)}" ${val === o ? 'checked' : ''}>${esc(o)}</label>`).join('')}</div>`;
+const field = (lbl, path, val, o = {}) => {
+  const id = 'f-' + path.replace(/\./g, '-');
+  const inp = o.type === 'num'
+    ? `<input class="in num" id="${id}" data-num="${path}" inputmode="decimal" autocomplete="off" value="${val == null ? '' : esc(String(val).replace('.', ','))}" placeholder="${o.ph || '0'}">`
+    : `<input class="in" id="${id}" data-txt="${path}" autocomplete="off" value="${esc(val ?? '')}" placeholder="${esc(o.ph || '')}" ${o.list ? `list="${o.list}"` : ''}>`;
+  return `<div class="f"><label for="${id}">${lbl}</label>${o.unit ? `<div class="unit">${inp}<i>${o.unit}</i></div>` : inp}</div>`;
+};
+function renderForm() {
+  const r = editing; $('#btn-new').hidden = true;
+  const hist = [...inspecoes, ...enviadas];
+  const prods = [...new Set(hist.map(x => x.produtor).filter(Boolean))], vars = [...new Set(hist.map(x => x.variedade).filter(Boolean))];
+  $('#view').innerHTML = `
+  <datalist id="dl-prod">${prods.map(p => `<option value="${esc(p)}">`).join('')}</datalist>
+  <datalist id="dl-var">${vars.map(p => `<option value="${esc(p)}">`).join('')}</datalist>
+  <div class="form-head"><button class="btn ghost sm" type="button" id="f-back">${ICON.back}Voltar</button><div class="sp"></div><span class="saved" id="saved"></span><span class="eyebrow num">${esc(r.codigo)}</span></div>
+  <h1 style="margin-bottom:14px">${r.__new ? 'Nova inspeção de recepção' : 'Editar inspeção'}</h1>
+  <nav class="steps" aria-label="Seções"><a href="#" data-go="s1">1 · Carga</a><a href="#" data-go="s2">2 · Defeitos</a><a href="#" data-go="s3">3 · Diâmetro e Brix</a><a href="#" data-go="s4">4 · Avaliação geral</a><a href="#" data-go="s5">5 · Parecer</a></nav>
+
+  <section class="sec" id="s1"><div class="sec-h"><span class="n">1</span><h2>Identificação da carga</h2></div><div class="sec-b">
+    <div class="grid">
+      <div class="f"><label for="f-dataHora">Data e hora</label><input class="in num" type="datetime-local" id="f-dataHora" data-txt="dataHora" value="${esc(r.dataHora)}"></div>
+      ${field('Produtor', 'produtor', r.produtor, {ph: 'Ex.: Nova Neruda', list: 'dl-prod'})}
+      ${field('Variedade', 'variedade', r.variedade, {ph: 'Ex.: Bebop', list: 'dl-var'})}
+      ${field('Parcela', 'parcela', r.parcela, {ph: 'Ex.: 112, 113'})}
+    </div>
+    <div class="grid">
+      <div class="f"><label for="f-unidade">Unidade de medida</label><select class="in" id="f-unidade" data-txt="unidade">${UNIDADES.map(u => `<option ${r.unidade === u ? 'selected' : ''}>${u}</option>`).join('')}</select></div>
+      ${field('Qtde. recebida', 'qtdeRecebida', r.qtdeRecebida, {type: 'num', unit: 'un'})}
+      ${field('Peso médio', 'pesoMedio', r.pesoMedio, {type: 'num', unit: 'kg'})}
+      ${field('Unidades analisadas', 'unAnalisadas', r.unAnalisadas, {type: 'num', unit: 'un'})}
+    </div>
+    <div class="f"><span class="lbl">Total analisado (peso médio × unidades)</span><div class="calc" id="c-total"></div></div>
+  </div></section>
+
+  <section class="sec" id="s2"><div class="sec-h"><span class="n">2</span><h2>Resultados · defeitos</h2></div><div class="sec-b">
+    <div class="defects" id="defects"></div>
+    <div class="add-row"><input class="in" id="new-def" placeholder="Outro parâmetro (ex.: Baga murcha)"><button class="btn" type="button" id="add-def">${ICON.plus}Adicionar</button></div>
+    <div class="total-bar"><span>Total de defeitos</span><span class="num" id="c-def"></span></div>
+  </div></section>
+
+  <section class="sec" id="s3"><div class="sec-h"><span class="n">3</span><h2>Diâmetro e Brix</h2></div><div class="sec-b"><div class="two">
+    <div class="f"><span class="lbl">Diâmetro da baga (mm)</span><div class="trio">${field('Mínimo', 'diametro.min', r.diametro.min, {type: 'num'})}${field('Média', 'diametro.med', r.diametro.med, {type: 'num'})}${field('Máximo', 'diametro.max', r.diametro.max, {type: 'num'})}</div>${photosHTML('diametro.fotos', r.diametro.fotos)}</div>
+    <div class="f"><span class="lbl">Brix (°Bx)</span><div class="trio">${field('Mínimo', 'brix.min', r.brix.min, {type: 'num'})}${field('Média', 'brix.med', r.brix.med, {type: 'num'})}${field('Máximo', 'brix.max', r.brix.max, {type: 'num'})}</div>${photosHTML('brix.fotos', r.brix.fotos)}</div>
+  </div></div></section>
+
+  <section class="sec" id="s4"><div class="sec-h"><span class="n">4</span><h2>Avaliação geral</h2></div><div class="sec-b">
+    <div class="grid" style="align-items:end">${field('Degrana', 'degrana.kg', r.degrana.kg, {type: 'num', unit: 'kg', ph: '0,000'})}<div class="f"><span class="lbl">% da amostra</span><div class="calc" id="c-deg"></div></div></div>
+    ${photosHTML('degrana.fotos', r.degrana.fotos)}
+    <div class="f"><span class="lbl">Presença de corpo estranho</span>${radios('ce', ['Não', 'Sim'], r.corpoEstranho.presente, 'good')}</div>
+    <div id="ce-box" ${r.corpoEstranho.presente === 'Sim' ? '' : 'hidden'} style="display:grid;gap:12px">${field('Descrição do corpo estranho', 'corpoEstranho.descricao', r.corpoEstranho.descricao, {ph: 'Ex.: caramujo no cacho'})}${photosHTML('corpoEstranho.fotos', r.corpoEstranho.fotos)}</div>
+    ${field('Outros achados', 'outros', r.outros, {ph: 'Ex.: baga murcha, cochonilha'})}
+    <div class="f"><span class="lbl">Fotos gerais da carga</span>${photosHTML('fotosGerais', r.fotosGerais)}</div>
+  </div></section>
+
+  <section class="sec" id="s5"><div class="sec-h"><span class="n">5</span><h2>Parecer final</h2></div><div class="sec-b">
+    <div class="parecer">
+      <div class="f"><span class="lbl">Avaliação do Brix</span>${radios('p-brix', ['Conforme', 'Não conforme'], r.parecer.brix, 'good')}</div>
+      <div class="f"><span class="lbl">Coloração</span>${radios('p-cor', ['Conforme', 'Não conforme'], r.parecer.coloracao, 'good')}</div>
+      <div class="f"><span class="lbl">Peso será avaliado</span>${radios('p-peso', ['Sim', 'Não'], r.parecer.pesoAvaliado)}</div>
+      <div class="f"><span class="lbl">Há devolução</span>${radios('p-dev', ['Não', 'Sim'], r.parecer.devolucao, 'good')}</div>
+    </div>
+    <div class="f"><span class="lbl">Condição do recebimento</span>${radios('p-cond', ['Conforme', 'Conforme com ressalva', 'Não conforme'], r.parecer.condicao, 'good')}</div>
+    <div class="f"><span class="lbl">Ocorrências observadas</span><div class="opt" id="ocs">${[...new Set([...OCORRENCIAS, ...r.ocorrencias])].map(o => `<label><input type="checkbox" value="${esc(o)}" ${r.ocorrencias.includes(o) ? 'checked' : ''}>${esc(o)}</label>`).join('')}</div>
+      <div class="add-row" style="margin-top:4px"><input class="in" id="new-oc" placeholder="Outra ocorrência"><button class="btn" type="button" id="add-oc">${ICON.plus}Adicionar</button></div></div>
+    <div class="f"><label for="f-cons">Considerações finais</label><textarea class="in" id="f-cons" data-txt="consideracoes" placeholder="Ex.: A fruta avaliada apresentou problemas de limpeza.">${esc(r.consideracoes)}</textarea></div>
+    <div class="f"><label for="f-obs">Observações</label><textarea class="in" id="f-obs" data-txt="observacoes" placeholder="Ex.: Brix da parcela 113: média 20, mínimo 18, máximo 23.">${esc(r.observacoes)}</textarea></div>
+    <div class="grid">${field('Avaliador', 'avaliador', r.avaliador, {ph: 'Nome de quem inspecionou'})}</div>
+    <div class="f"><span class="lbl">Assinatura do avaliador</span>
+      <div class="sig"><canvas id="sig"></canvas><div class="line"></div><div class="hint" id="sig-hint">${r.assinatura ? '' : 'Assine aqui com o dedo'}</div></div>
+      <div class="sig-tools"><button class="btn sm ghost" type="button" id="sig-clear">Limpar assinatura</button></div></div>
+  </div></section>`;
+  const conc = r.status === 'concluida';
+  $('#bar-slot').innerHTML = `<div class="bar"><div class="bar-in"><span class="msg" id="bar-msg">${conc ? 'Inspeção concluída: salve para gravar as mudanças' : 'Rascunho salvo automaticamente no celular'}</span><span class="sp"></span>
+    <button class="btn" type="button" id="b-draft">${conc ? 'Salvar' : 'Salvar rascunho'}</button>
+    <button class="btn pri" type="button" id="b-done">${conc ? 'Salvar e ver laudo' : 'Concluir inspeção'}</button></div></div>`;
+  drawDefects(); bindForm(); initSig();
+}
+function drawDefects() {
+  const r = editing;
+  $('#defects').innerHTML = r.defeitos.map((d, i) => `<div class="defect">
+    <div class="f f-nome"><label for="dn-${i}">Parâmetro</label><input class="in" id="dn-${i}" data-dn="${i}" value="${esc(d.nome)}"></div>
+    <div class="f f-kg"><label for="dk-${i}">Peso</label><div class="unit"><input class="in num" id="dk-${i}" data-dk="${i}" inputmode="decimal" autocomplete="off" placeholder="0,000" value="${d.kg == null ? '' : String(d.kg).replace('.', ',')}"><i>kg</i></div></div>
+    <div class="pct num" data-dp="${i}"></div>
+    <button class="btn ghost sm rm" type="button" data-drm="${i}" aria-label="Remover parâmetro">${ICON.trash}</button>
+    ${photosHTML('defeitos.' + i + '.fotos', d.fotos)}</div>`).join('');
+  recalc();
+}
+function recalc() {
+  const r = editing; if (!r) return; const t = totalAnalisado(r);
+  $('#c-total').textContent = t == null ? 'Informe peso médio e unidades' : fmtI(t) + ' kg';
+  r.defeitos.forEach((d, i) => { const el = document.querySelector(`[data-dp="${i}"]`); if (el) el.textContent = fmt(pct(d.kg, r)) + '%'; });
+  const s = somaDef(r); $('#c-def').textContent = fmt(s, 3) + ' kg · ' + fmt(pct(s, r)) + '%';
+  $('#c-deg').textContent = fmt(pct(r.degrana.kg, r)) + '%';
+}
+function mudou() {
+  const r = editing; if (!r) return; r.__dirty = true;
+  if (r.status !== 'rascunho') return;
+  clearTimeout(autoT); autoT = setTimeout(async () => { if (editing !== r) return; try { await salvar(r, false); const s = $('#saved'); if (s) s.textContent = 'Salvo ' + new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'}); } catch (e) { toast('Não foi possível salvar: ' + e.message); } }, 700);
+}
+function bindForm() {
+  const v = $('#view'), r = editing;
+  v.addEventListener('input', e => { const t = e.target;
+    if (t.dataset.num) { setPath(r, t.dataset.num, num(t.value)); recalc(); }
+    else if (t.dataset.txt) setPath(r, t.dataset.txt, t.value);
+    else if (t.dataset.dn != null) r.defeitos[+t.dataset.dn].nome = t.value;
+    else if (t.dataset.dk != null) { r.defeitos[+t.dataset.dk].kg = num(t.value); recalc(); }
+    else return;
+    mudou(); });
+  v.addEventListener('change', e => { const t = e.target;
+    if (t.dataset.txt && t.tagName === 'SELECT') { setPath(r, t.dataset.txt, t.value); mudou(); }
+    if (t.type === 'radio') { const map = {'ce': 'corpoEstranho.presente', 'p-brix': 'parecer.brix', 'p-cor': 'parecer.coloracao', 'p-peso': 'parecer.pesoAvaliado', 'p-dev': 'parecer.devolucao', 'p-cond': 'parecer.condicao'};
+      setPath(r, map[t.name], t.value); if (t.name === 'ce') $('#ce-box').hidden = t.value !== 'Sim'; mudou(); }
+    if (t.type === 'checkbox' && t.closest('#ocs')) { r.ocorrencias = [...$('#ocs').querySelectorAll('input:checked')].map(x => x.value); mudou(); }
+    if (t.type === 'file') addFotos(t); });
+  v.addEventListener('click', e => { const b = e.target.closest('button, a[data-go]'); if (!b) return;
+    if (b.dataset.go) { e.preventDefault(); $('#' + b.dataset.go).scrollIntoView({behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'}); return; }
+    if (b.dataset.rm != null) { const box = b.closest('.photos'); getPath(r, box.dataset.path).splice(+b.dataset.rm, 1); refreshPhotos(box); mudou(); return; }
+    if (b.dataset.drm != null) { r.defeitos.splice(+b.dataset.drm, 1); drawDefects(); mudou(); } });
+  $('#add-def').onclick = () => { const n = $('#new-def').value.trim(); if (!n) return $('#new-def').focus(); r.defeitos.push({nome: n, kg: null, fotos: []}); $('#new-def').value = ''; drawDefects(); mudou(); };
+  $('#add-oc').onclick = () => { const n = $('#new-oc').value.trim(); if (!n) return $('#new-oc').focus();
+    if (!r.ocorrencias.includes(n)) r.ocorrencias.push(n);
+    const ex = [...$('#ocs').querySelectorAll('input')].find(x => x.value === n);
+    if (ex) ex.checked = true; else $('#ocs').insertAdjacentHTML('beforeend', `<label><input type="checkbox" value="${esc(n)}" checked>${esc(n)}</label>`);
+    $('#new-oc').value = ''; mudou(); };
+  $('#f-back').onclick = () => { location.hash = r.__new || r.status !== 'concluida' ? 'lista' : 'laudo-' + r.id; };
+  $('#b-draft').onclick = () => finalizar(false);
+  $('#b-done').onclick = () => finalizar(true);
+}
+function refreshPhotos(box) { const p = box.dataset.path; box.outerHTML = photosHTML(p, getPath(editing, p)); }
+async function addFotos(input) {
+  const box = input.closest('.photos'), path = box.dataset.path, files = [...input.files]; input.value = '';
+  const list = getPath(editing, path);
+  for (const f of files) {
+    const ph = document.createElement('div'); ph.className = 'ph loading'; box.insertBefore(ph, box.querySelector('.add-ph'));
+    pendentes++;
+    try { list.push(await guardarFoto(await compress(f))); } catch (err) { toast('Não foi possível usar a foto: ' + (err?.message || 'erro')); }
+    finally { pendentes--; }
+  }
+  const cur = document.querySelector(`.photos[data-path="${path}"]`); if (cur) refreshPhotos(cur); mudou();
+}
+let sigDirty = false, sigCarregada = false;
+function initSig() {
+  const c = $('#sig'), wrap = c.parentElement, ctx = c.getContext('2d'); sigDirty = false; sigCarregada = false;
+  const dpr = Math.max(1, window.devicePixelRatio || 1);
+  c.width = wrap.clientWidth * dpr; c.height = wrap.clientHeight * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.lineWidth = 2.6; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.strokeStyle = '#111';
+  if (editing.assinatura) { const img = new Image(); img.onload = () => { const h = 90, w = img.width * h / img.height; ctx.drawImage(img, (wrap.clientWidth - w) / 2, wrap.clientHeight - 34 - h + 8, w, h); sigCarregada = true; }; img.src = src(editing.assinatura); }
+  let drawing = false, last = null;
+  const pos = e => { const b = c.getBoundingClientRect(); return [e.clientX - b.left, e.clientY - b.top]; };
+  // Só apaga o quadro quando havia uma assinatura antiga carregada (assinar de novo substitui).
+  // Entre um traço e outro da mesma assinatura, nada é apagado.
+  c.onpointerdown = e => { e.preventDefault(); clearTimeout(sigT); drawing = true; last = pos(e); c.setPointerCapture(e.pointerId); $('#sig-hint').textContent = '';
+    if (sigCarregada) { ctx.clearRect(0, 0, c.width, c.height); sigCarregada = false; }
+    ctx.beginPath(); ctx.arc(last[0], last[1], 1.2, 0, Math.PI * 2); ctx.fillStyle = '#111'; ctx.fill(); sigDirty = true; };
+  c.onpointermove = e => { if (!drawing) return; e.preventDefault();
+    for (const ev of (e.getCoalescedEvents ? e.getCoalescedEvents() : [e])) { const p = pos(ev); ctx.beginPath(); ctx.moveTo(...last); ctx.lineTo(...p); ctx.stroke(); last = p; } };
+  c.onpointerup = c.onpointercancel = () => { if (drawing) { drawing = false; guardarAssinatura(); } };
+  $('#sig-clear').onclick = () => { clearTimeout(sigT); ctx.clearRect(0, 0, c.width, c.height); editing.assinatura = null; sigDirty = false; sigCarregada = false; $('#sig-hint').textContent = 'Assine aqui com o dedo'; mudou(); };
+}
+let sigT;
+function guardarAssinatura() { clearTimeout(sigT); sigT = setTimeout(async () => { if (!editing || !sigDirty) return; const b = await sigBlob(); if (b) { editing.assinatura = await guardarFoto(b); sigDirty = false; mudou(); } }, 2500); }
+function sigBlob() {
+  const c = $('#sig'); if (!c) return Promise.resolve(null);
+  const ctx = c.getContext('2d'), d = ctx.getImageData(0, 0, c.width, c.height).data;
+  let x0 = c.width, y0 = c.height, x1 = 0, y1 = 0;
+  for (let y = 0; y < c.height; y += 2) for (let x = 0; x < c.width; x += 2) if (d[(y * c.width + x) * 4 + 3] > 0) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+  if (x1 <= x0) return Promise.resolve(null);
+  const m = 8, w = x1 - x0 + m * 2, h = y1 - y0 + m * 2, o = document.createElement('canvas'); o.width = w; o.height = h;
+  o.getContext('2d').drawImage(c, x0 - m, y0 - m, w, h, 0, 0, w, h);
+  return new Promise(r => o.toBlob(r, 'image/png'));
+}
+async function salvar(r, recarregar = true) {
+  const body = structuredClone(r); delete body.__new; delete body.__dirty; body.atualizadoEm = new Date().toISOString();
+  await dbPut('inspecoes', body);
+  if (recarregar) await carregar();
+}
+async function finalizar(concluir) {
+  const r = editing;
+  if (pendentes) return toast('Aguarde as fotos terminarem de carregar.');
+  if (concluir) {
+    const falta = [];
+    if (!r.produtor.trim()) falta.push('produtor'); if (!r.variedade.trim()) falta.push('variedade');
+    if (totalAnalisado(r) == null) falta.push('peso médio e unidades analisadas'); if (!r.parecer.condicao) falta.push('condição do recebimento');
+    if (falta.length) { toast('Preencha: ' + falta.join(', ') + '.'); ($('#s1')).scrollIntoView(); if (r.produtor.trim() && r.variedade.trim() && totalAnalisado(r) != null) $('#s5').scrollIntoView(); return; }
+  }
+  const bd = $('#b-done'), bs = $('#b-draft'); bd.disabled = bs.disabled = true; clearTimeout(autoT);
+  try {
+    if (sigDirty) { clearTimeout(sigT); const b = await sigBlob(); if (b) r.assinatura = await guardarFoto(b); sigDirty = false; }
+    if (r.avaliador && r.avaliador !== cfg.avaliador) { cfg.avaliador = r.avaliador; await salvarCfg(); }
+    if (concluir) r.status = 'concluida';
+    if (r.__dirty) { delete r.compartilhadaEm; delete r.onedriveEm; } // mudou depois de enviar: enviar de novo
+    await salvar(r); const id = r.id; editing = null; await limparOrfas();
+    toast(concluir ? 'Inspeção concluída. Agora é só enviar o PDF.' : 'Salvo', concluir ? 3200 : 2000);
+    location.hash = concluir || r.status === 'concluida' ? 'laudo-' + id : 'lista';
+  } catch (err) { toast('Não foi possível salvar: ' + (err?.message || 'tente de novo')); bd.disabled = bs.disabled = false; }
+}
+
+/* ---------- Laudo ---------- */
+const figs = (list, cap) => (list || []).length ? `<div class="rep-ph">${list.map(f => `<figure><img alt="${esc(cap)}" src="${esc(src(f))}" loading="lazy"><figcaption>${esc(cap)}</figcaption></figure>`).join('')}</div>` : '';
+function renderLaudo(r) {
+  $('#btn-new').hidden = false;
+  const d = dt(r), t = totalAnalisado(r), s = somaDef(r), maxP = Math.max(1, ...r.defeitos.map(x => pct(x.kg, r) || 0)), p = r.parecer || {};
+  const yn = (v, bad) => v ? `<span class="chip ${v === bad ? 'bad' : (v === 'Conforme com ressalva' ? 'warn' : 'ok')}">${esc(v)}</span>` : '—';
+  const allPh = r.defeitos.flatMap(x => (x.fotos || []).map(f => ({f, c: x.nome})));
+  $('#view').innerHTML = `
+  <div class="rep-actions">
+    <button class="btn ghost sm" type="button" id="r-back">${ICON.back}Inspeções</button><span class="sp"></span>
+    <span id="r-del-slot"><button class="btn ghost sm danger" type="button" id="r-del">${ICON.trash}Excluir</button></span>
+    <button class="btn sm" type="button" id="r-edit">${ICON.edit}Editar</button>
+  </div>
+  <div id="r-envio"></div>
+  <article class="sheet">
+    <div class="sheet-top"><img class="logo" style="height:30px" alt="Latitude 9" src="icons/logo.png"><div class="code"><b>N.F.QUAL.001</b><br>${esc(r.codigo)}</div></div>
+    <div class="sheet-title"><h1>Inspeção de recepção</h1>${condChip(r)}</div>
+    <div class="id-grid">
+      <div><small>Data</small><b class="num">${d.d} ${d.t}</b></div><div><small>Produtor</small><b>${esc(r.produtor || '—')}</b></div>
+      <div><small>Variedade</small><b>${esc(r.variedade || '—')}</b></div><div><small>Parcela</small><b>${esc(r.parcela || '—')}</b></div>
+      <div><small>Qtde. recebida</small><b class="num">${fmtI(r.qtdeRecebida)} ${esc((r.unidade || '').toLowerCase())}${r.qtdeRecebida > 1 ? 's' : ''}</b></div>
+      <div><small>Peso médio</small><b class="num">${fmtI(r.pesoMedio)} kg</b></div><div><small>UN analisadas</small><b class="num">${fmtI(r.unAnalisadas)}</b></div>
+      <div><small>Total analisado</small><b class="num">${fmtI(t)} kg</b></div>
+    </div>
+    <section class="rs"><div class="rs-h"><span>Resultados · defeitos</span><span class="num">${pctTxt(pct(s, r))}</span></div>
+      <table class="tbl"><tbody>${r.defeitos.map(x => { const pp = pct(x.kg, r); return `<tr><td>${esc(x.nome)}</td><td class="bar-c"><div class="mini"><i style="width:${pp ? Math.max(2, pp / maxP * 100) : 0}%"></i></div></td><td class="v">${pctTxt(pp)}</td></tr>`; }).join('')}</tbody></table>
+      ${allPh.length ? `<div class="rep-ph">${allPh.map(({f, c}) => `<figure><img alt="${esc(c)}" src="${esc(src(f))}" loading="lazy"><figcaption>${esc(c)}</figcaption></figure>`).join('')}</div>` : ''}</section>
+    <div class="two" style="gap:0 26px">
+      <section class="rs"><div class="rs-h"><span>Diâmetro (mm)</span></div><div class="scale"><div><small>Mín.</small><b>${fmtI(r.diametro?.min)}</b></div><div class="mid"><small>Média</small><b>${fmtI(r.diametro?.med)}</b></div><div><small>Máx.</small><b>${fmtI(r.diametro?.max)}</b></div></div>${figs(r.diametro?.fotos, 'Diâmetro')}</section>
+      <section class="rs"><div class="rs-h"><span>Brix (°Bx)</span></div><div class="scale"><div><small>Mín.</small><b>${fmtI(r.brix?.min)}</b></div><div class="mid"><small>Média</small><b>${fmtI(r.brix?.med)}</b></div><div><small>Máx.</small><b>${fmtI(r.brix?.max)}</b></div></div>${figs(r.brix?.fotos, 'Brix')}</section>
+    </div>
+    <section class="rs"><div class="rs-h"><span>Avaliação geral</span></div>
+      <dl class="kv"><dt>Degrana</dt><dd class="num">${pctTxt(pct(r.degrana?.kg, r))}</dd>
+        <dt>Presença de corpo estranho</dt><dd>${esc(r.corpoEstranho?.presente || '—')}${r.corpoEstranho?.descricao ? ' · ' + esc(r.corpoEstranho.descricao) : ''}</dd>
+        <dt>Outros</dt><dd>${esc(r.outros || '—')}</dd></dl>
+      ${figs(r.degrana?.fotos, 'Degrana')}${figs(r.corpoEstranho?.fotos, 'Corpo estranho')}${figs(r.fotosGerais, 'Visão geral')}</section>
+    <section class="rs"><div class="rs-h"><span>Parecer</span></div>
+      <dl class="kv"><dt>Avaliação do Brix</dt><dd>${yn(p.brix, 'Não conforme')}</dd><dt>Coloração</dt><dd>${yn(p.coloracao, 'Não conforme')}</dd>
+        <dt>Peso será avaliado</dt><dd>${esc(p.pesoAvaliado || '—')}</dd><dt>Condição do recebimento</dt><dd>${yn(p.condicao, 'Não conforme')}</dd><dt>Há devolução</dt><dd>${yn(p.devolucao, 'Sim')}</dd></dl>
+      ${r.ocorrencias?.length ? `<div style="margin-top:16px"><div class="eyebrow" style="margin-bottom:8px">Ocorrências</div><div class="tags">${r.ocorrencias.map(o => `<span class="tag">${esc(o)}</span>`).join('')}</div></div>` : ''}
+      ${r.consideracoes ? `<div style="margin-top:16px"><div class="eyebrow" style="margin-bottom:6px">Considerações finais</div><p class="prose">${esc(r.consideracoes)}</p></div>` : ''}
+      ${r.observacoes ? `<div style="margin-top:16px"><div class="eyebrow" style="margin-bottom:6px">Observações</div><p class="prose">${esc(r.observacoes)}</p></div>` : ''}</section>
+    <div class="sign"><div class="sig-img">${r.assinatura ? `<img alt="Assinatura" src="${esc(src(r.assinatura))}">` : ''}</div><div class="ln"></div><b>${esc(r.avaliador || 'Assinatura do avaliador')}</b><span class="num">Avaliador · ${d.d}</span></div>
+  </article>`;
+  $('#r-back').onclick = () => { location.hash = 'lista'; };
+  $('#r-edit').onclick = () => { location.hash = 'editar-' + r.id; };
+  montarEnvio($('#r-envio'), [r], null);
+  pdfDe(r).then(f => { if ($('#r-envio')) montarEnvio($('#r-envio'), [r], [f]); }).catch(e => toast('Não foi possível gerar o PDF: ' + (e?.message || 'erro')));
+  $('#r-del').onclick = () => {
+    $('#r-del-slot').innerHTML = `<span class="confirm">${pendente(r) ? 'Ainda não foi enviada. Excluir mesmo assim?' : 'Excluir do celular?'} <button class="btn sm danger" type="button" id="r-del-y">Excluir</button><button class="btn sm ghost" type="button" id="r-del-n">Cancelar</button></span>`;
+    $('#r-del-n').onclick = () => renderLaudo(r);
+    $('#r-del-y').onclick = async () => { await dbDel('inspecoes', r.id); await carregar(); await limparOrfas(); toast('Inspeção excluída'); location.hash = 'lista'; };
+  };
+}
+function nomeArquivo(r) {
+  const d = dt(r); const limpa = s => String(s || '').replace(/[\\/:*?"<>|]+/g, '-').replace(/\s+/g, ' ').trim();
+  return `${d.d.replace(/\//g, '-')} ${d.t.replace(':', 'h')} - ${limpa(r.produtor) || 'Sem produtor'} - ${limpa(r.variedade) || 'Sem variedade'} - ${r.codigo}.pdf`;
+}
+const pdfCache = new Map();
+async function pdfDe(r) {
+  const k = r.id + '|' + (r.atualizadoEm || ''); const c = pdfCache.get(r.id);
+  if (c && c.k === k) return c.file;
+  const file = new File([await gerarPDF(r)], nomeArquivo(r), {type: 'application/pdf'});
+  pdfCache.set(r.id, {k, file}); return file;
+}
+// Abre o menu de compartilhar do celular (WhatsApp, e-mail, Drive...). Sem esse menu, baixa os arquivos.
+async function compartilhar(files) {
+  if (navigator.canShare && navigator.canShare({files})) {
+    try { await navigator.share({files, title: files.length > 1 ? `${files.length} inspeções de recepção` : files[0].name}); return true; }
+    catch (e) { if (e.name === 'AbortError') return false; if (e.name === 'NotAllowedError') throw new Error('toque de novo em Compartilhar'); throw e; }
+  }
+  for (const f of files) { const u = URL.createObjectURL(f); const a = document.createElement('a'); a.href = u; a.download = f.name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 60000); await new Promise(r => setTimeout(r, 400)); }
+  return true;
+}
+const usaOD = () => cfg.onedrive === true; // desligado por padrão: o envio é só pelo WhatsApp
+const pendente = r => r.status === 'concluida' && (!r.compartilhadaEm || (usaOD() && !r.onedriveEm));
+const ultimoComp = () => [...inspecoes.flatMap(r => [r.compartilhadaEm, r.onedriveEm]), ...enviadas.map(x => x.compartilhadaEm || x.enviadoEm)].filter(Boolean).sort().pop();
+async function marcar(lista, campo) {
+  const agora = new Date().toISOString();
+  for (const r of lista) { const atual = await dbGet('inspecoes', r.id); if (!atual) continue; atual[campo] = agora; r[campo] = agora; await dbPut('inspecoes', atual); }
+  await carregar();
+}
+// Painel com os passos: 1) WhatsApp, 2) OneDrive (cai no PC sozinho), 3) apagar do celular.
+// Os PDFs são preparados antes: o celular só abre o menu de compartilhar logo após um toque.
+function montarEnvio(el, lista, files) {
+  if (!el) return;
+  const n = lista.length, todos = c => lista.every(r => r[c]);
+  const hora = c => { const v = lista.map(r => r[c]).filter(Boolean).sort().pop(); return v ? quando(v) : ''; };
+  const pdfs = n > 1 ? n + ' PDFs' : 'o PDF';
+  const passo = (num, campo, titulo, dica, rot) => {
+    const ok = todos(campo);
+    return `<div class="passo ${ok ? 'ok' : ''}"><span class="n">${ok ? '✓' : num}</span><div><b>${titulo}</b><small>${ok ? 'Feito ' + hora(campo) : dica}</small></div>
+      <button class="btn ${ok ? 'sm' : 'pri sm'}" type="button" data-dest="${campo}" ${files ? '' : 'disabled'}>${files ? (ok ? 'De novo' : rot) : 'Gerando…'}</button></div>`;
+  };
+  const algum = lista.some(r => r.compartilhadaEm || r.onedriveEm), faltaOD = usaOD() && !todos('onedriveEm');
+  el.innerHTML = `<div class="envio">
+    ${passo(1, 'compartilhadaEm', 'Enviar no WhatsApp', `Escolha o WhatsApp e o grupo da recepção`, 'Enviar')}
+    ${usaOD() ? passo(2, 'onedriveEm', 'Salvar no OneDrive', `Escolha OneDrive → pasta Inspeções Recepção. Cai no PC sozinho`, 'Salvar') : ''}
+    <div class="passo fim"><span class="n">${usaOD() ? 3 : 2}</span><div><b>Apagar do celular</b><small>${algum ? (faltaOD ? 'Falta salvar no OneDrive. Apague depois, para não perder.' : 'Já foi enviada. Pode liberar o espaço.') : 'Libera espaço depois de enviar.'}</small></div>
+      <button class="btn sm ${algum && !faltaOD ? 'danger' : ''}" type="button" data-apagar ${algum ? '' : 'disabled'}>Apagar</button></div>
+  </div>`;
+  el.querySelectorAll('[data-dest]').forEach(b => b.onclick = async () => {
+    try { if (!(await compartilhar(files))) return; } catch (e) { return toast('Não foi possível compartilhar: ' + e.message); }
+    await marcar(lista, b.dataset.dest); montarEnvio(el, lista, files);
+    toast(b.dataset.dest === 'onedriveEm' ? 'Salvo no OneDrive' : (usaOD() && !todos('onedriveEm') ? 'Enviado. Agora salve no OneDrive.' : 'Enviado'));
+  });
+  const ap = el.querySelector('[data-apagar]');
+  if (ap) ap.onclick = () => {
+    ap.closest('.passo').querySelector('small').innerHTML = `<span style="color:var(--bad)">Apagar ${n > 1 ? 'estas ' + n + ' inspeções' : 'esta inspeção'} e as fotos deste celular?</span>`;
+    ap.textContent = 'Confirmar'; ap.classList.add('danger');
+    ap.onclick = async () => { ap.disabled = true; await apagarDoCelular(lista); toast(n > 1 ? n + ' inspeções apagadas do celular' : 'Inspeção apagada do celular'); location.hash === '#lista' ? route() : (location.hash = 'lista'); };
+  };
+}
+// Apaga fotos e PDF do celular; guarda só um resumo leve no histórico.
+async function apagarDoCelular(lista) {
+  for (const r of lista) {
+    const t = totalAnalisado(r);
+    await dbPut('enviadas', {id: r.id, codigo: r.codigo, produtor: r.produtor, variedade: r.variedade, parcela: r.parcela, dataHora: r.dataHora,
+      condicao: r.parecer?.condicao || '', compartilhadaEm: r.compartilhadaEm || r.onedriveEm || new Date().toISOString(), onedriveEm: r.onedriveEm || null, apagadaEm: new Date().toISOString(),
+      defeitosPct: pct(somaDef(r), r), degranaPct: pct(r.degrana?.kg, r), brixMed: r.brix?.med ?? null, totalKg: t});
+    await dbDel('inspecoes', r.id); pdfCache.delete(r.id);
+  }
+  await carregar(); await limparOrfas();
+}
+
+/* ---------- PDF ---------- */
+const loadImg = s => new Promise(res => { if (!s) return res(null); const im = new Image(); im.onload = () => res(im); im.onerror = () => res(null); im.src = s; });
+async function imgData(s, maxW = 900) {
+  const im = await loadImg(s); if (!im) return null;
+  const k = Math.min(1, maxW / im.width); const c = document.createElement('canvas'); c.width = Math.round(im.width * k); c.height = Math.round(im.height * k);
+  const x = c.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, c.width, c.height); x.drawImage(im, 0, 0, c.width, c.height);
+  return {data: c.toDataURL('image/jpeg', .8), w: c.width, h: c.height};
+}
+async function gerarPDF(r) {
+  if (!window.jspdf) throw new Error('gerador de PDF indisponível');
+  await preUrls(r);
+  const {jsPDF} = window.jspdf; const doc = new jsPDF({unit: 'mm', format: 'a4', compress: true});
+  const W = 210, M = 16, CW = W - M * 2, OR = [245, 134, 52], INK = [20, 20, 20], MU = [110, 116, 122];
+  let y = 0, page = 1;
+  const logo = await imgData('icons/logo.png', 600);
+  const footer = () => { doc.setFontSize(7.5); doc.setTextColor(...MU); doc.setFont('helvetica', 'normal'); doc.text(r.codigo, M, 290); doc.text('Página ' + page, W - M, 290, {align: 'right'}); };
+  const nova = () => { footer(); doc.addPage(); page++; y = 16; };
+  const need = h => { if (y + h > 282) nova(); };
+  const bar = (title, right) => { need(16); doc.setFillColor(...OR); doc.rect(M, y, CW, 6, 'F'); doc.setTextColor(255, 255, 255); doc.setFont('helvetica', 'bold'); doc.setFontSize(10);
+    doc.text(title, M + 2, y + 4.3); if (right) doc.text(right, W - M - 2, y + 4.3, {align: 'right'}); y += 10; };
+  const line = (k, v, o = {}) => { need(6); v = String(v); doc.setFontSize(9); doc.setFont('helvetica', 'bold'); doc.setTextColor(...INK); doc.text(k + ':', M, y);
+    doc.setFont('helvetica', o.bold ? 'bold' : 'normal'); if (o.color) doc.setTextColor(...o.color);
+    const maxV = CW - doc.getTextWidth(k) - 10; if (doc.getTextWidth(v) > maxV) v = doc.splitTextToSize(v, maxV)[0] + '…';
+    doc.text(v, W - M, y, {align: 'right'}); doc.setDrawColor(...INK); doc.setLineWidth(.15); doc.setLineDashPattern([.3, .9], 0);
+    doc.line(M + doc.getTextWidth(k + ':') + 1.5, y, W - M - doc.getTextWidth(v) - 1.5, y); doc.setLineDashPattern([], 0); y += 5; };
+  // Fotos: 2 por linha, em quadros com borda, nome no alto e embaixo (como no modelo antigo)
+  const photos = async items => { if (!items.length) return; const cw = CW / 2, ch = 76, top = 8, bot = 8;
+    for (let i = 0; i < items.length; i += 2) { need(ch + 4);
+      const n = Math.min(2, items.length - i), x0 = M + (CW - n * cw) / 2;
+      doc.setDrawColor(0, 0, 0); doc.setLineWidth(.3); doc.rect(x0, y, n * cw, ch); if (n === 2) doc.line(x0 + cw, y, x0 + cw, y + ch);
+      doc.line(x0, y + ch - bot, x0 + n * cw, y + ch - bot);
+      for (let j = 0; j < n; j++) { const it = items[i + j], im = await imgData(src(it.f)); const x = x0 + j * cw;
+        doc.setFont('helvetica', 'bold'); doc.setFontSize(7.5); doc.setTextColor(...INK);
+        doc.text(it.c || '', x + cw / 2, y + 5, {align: 'center'}); doc.text(it.c || '', x + cw / 2, y + ch - 2.8, {align: 'center'});
+        if (im) { const bw = cw - 8, bh = ch - top - bot - 4, s = Math.min(bw / im.w, bh / im.h), w = im.w * s, h = im.h * s;
+          doc.addImage(im.data, 'JPEG', x + (cw - w) / 2, y + top + (ch - top - bot - h) / 2, w, h); } }
+      y += ch + 4; } y += 1; };
+  const d = dt(r), t = totalAnalisado(r), s = somaDef(r), p = r.parecer || {};
+  const cRed = [188, 52, 38], cGrn = [29, 127, 72], cAmb = [154, 100, 0];
+  const col = (v, bad) => !v ? null : v === bad ? cRed : v === 'Conforme com ressalva' ? cAmb : cGrn;
+  // Página 1: cabeçalho como o modelo
+  if (logo) doc.addImage(logo.data, 'JPEG', M, 14, 50, 50 * logo.h / logo.w);
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(8); doc.setTextColor(...INK); doc.text('N.F.QUAL.001', W - M, 12, {align: 'right'});
+  y = 52; doc.setFontSize(14); doc.text('INSPEÇÃO DE RECEPÇÃO', W / 2, y, {align: 'center'}); y += 14;
+  const idf = [['Data', d.d + ' ' + d.t], ['UN. de medida', r.unidade || '—'], ['Produtor', (r.produtor || '—').toUpperCase()], ['Peso Médio', fmtI(r.pesoMedio) + 'kg'], ['Variedade', (r.variedade || '—').toUpperCase()],
+    ['UN analisadas', fmtI(r.unAnalisadas)], ['Parcela', r.parcela || '—'], ['Total analisado', fmtI(t) + 'kg'], ['Qtde. recebida', fmtI(r.qtdeRecebida)]];
+  doc.setFontSize(8);
+  idf.forEach((kv, i) => { const x = M + (i % 2) * (CW / 2 + 2), yy = y + Math.floor(i / 2) * 6;
+    doc.setFont('helvetica', 'bold'); doc.setTextColor(...INK); doc.text(kv[0] + ':', x, yy);
+    doc.setTextColor(...OR); doc.text(doc.splitTextToSize(String(kv[1]), CW / 2 - 34)[0], x + 32, yy); });
+  y += Math.ceil(idf.length / 2) * 6 + 8;
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(11); doc.setTextColor(...INK); doc.text('RESULTADOS', W / 2, y, {align: 'center'}); y += 6;
+  bar('Parâmetros', pctTxt(pct(s, r)));
+  r.defeitos.forEach(x => line(x.nome || 'Parâmetro', pctTxt(pct(x.kg, r)), {bold: true}));
+  y += 3; await photos(r.defeitos.flatMap(x => (x.fotos || []).map(f => ({f, c: x.nome}))));
+  bar('Diâmetro'); line('Mínimo', fmtI(r.diametro?.min)); line('Média', fmtI(r.diametro?.med)); line('Máximo', fmtI(r.diametro?.max));
+  y += 3; await photos((r.diametro?.fotos || []).map(f => ({f, c: 'Diâmetro'})));
+  bar('Brix'); line('Mínimo', fmtI(r.brix?.min)); line('Média', fmtI(r.brix?.med)); line('Máximo', fmtI(r.brix?.max));
+  y += 3; await photos((r.brix?.fotos || []).map(f => ({f, c: 'Brix'})));
+  bar('Avaliação Geral');
+  line('Degrana', pctTxt(pct(r.degrana?.kg, r)), {bold: true}); y += 2;
+  await photos((r.degrana?.fotos || []).map(f => ({f, c: 'Degrana'})));
+  need(8); doc.setFont('helvetica', 'bold'); doc.setFontSize(8); doc.setTextColor(...INK); doc.text('Presença de Corpo estranho: ', M, y);
+  const wCE = doc.getTextWidth('Presença de Corpo estranho: '); doc.setFont('helvetica', 'normal'); doc.text(r.corpoEstranho?.presente || '—', M + wCE + 1, y); y += 5;
+  if (r.corpoEstranho?.descricao) { doc.splitTextToSize(r.corpoEstranho.descricao, CW).forEach(l => { need(5); doc.text(l, M, y); y += 4.5; }); }
+  y += 1; await photos([...(r.corpoEstranho?.fotos || []).map(f => ({f, c: 'Corpo estranho'})), ...(r.fotosGerais || []).map(f => ({f, c: 'Visão geral'}))]);
+  need(8); doc.setFont('helvetica', 'bold'); doc.setFontSize(8); const wO = doc.getTextWidth('Outros: '); doc.text('Outros: ', M, y); doc.setFont('helvetica', 'normal'); doc.text(r.outros || '—', M + wO + 1, y); y += 8;
+  // Parecer em linhas simples, como no modelo
+  const kv2 = (k, v, c) => { need(5); doc.setFont('helvetica', 'bold'); doc.setFontSize(8); doc.setTextColor(...INK); const wk = doc.getTextWidth(k + ': '); doc.text(k + ': ', M, y);
+    doc.setFont('helvetica', 'normal'); if (c) doc.setTextColor(...c); doc.text(v || '—', M + wk + 1, y); y += 5; };
+  kv2('Avaliação do Brix', p.brix, col(p.brix, 'Não conforme')); kv2('Coloração', p.coloracao, col(p.coloracao, 'Não conforme'));
+  kv2('Peso será Avaliado', p.pesoAvaliado); kv2('Condição do recebimento', p.condicao, col(p.condicao, 'Não conforme')); kv2('Há devolução', p.devolucao, col(p.devolucao, 'Sim'));
+  doc.setTextColor(...INK);
+  const par = (k, txt) => { if (!txt) return; need(6); doc.setFont('helvetica', 'bold'); doc.setFontSize(8); doc.setTextColor(...INK); const wk = doc.getTextWidth(k + ': '); doc.text(k + ': ', M, y);
+    doc.setFont('helvetica', 'normal'); let primeira = true;
+    String(txt).split(/\r?\n/).map(l => l.trim()).filter(Boolean).forEach(par1 => {
+      doc.splitTextToSize(par1, primeira ? CW - wk - 1 : CW).forEach(l => { need(5); doc.text(l, primeira ? M + wk + 1 : M, y); y += primeira ? 5 : 4.5; primeira = false; }); }); };
+  // Ocorrências sem repetir o que já foi escrito em Considerações finais, Outros ou nas observações
+  const norm = t => String(t || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, ' ').split(' ').filter(Boolean).map(w => w.length > 4 ? w.replace(/(es|s)$/, '') : w).join(' ');
+  const jaDito = norm([r.consideracoes, r.outros, r.observacoes].join(' . '));
+  const vistas = new Set();
+  const ocs = (r.ocorrencias || []).filter(o => { const n = norm(o); if (!n || vistas.has(n) || (' ' + jaDito + ' ').includes(' ' + n + ' ')) return false; vistas.add(n); return true; });
+  par('Considerações finais', r.consideracoes);
+  ocs.forEach(o => { need(5); doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.setTextColor(...INK); doc.text(String(o), M, y); y += 4.5; });
+  if (r.observacoes) { y += 3; doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.setTextColor(...INK); ('Obs: ' + r.observacoes).split(/\r?\n/).filter(l => l.trim()).forEach(par1 => doc.splitTextToSize(par1, CW).forEach(l => { need(5); doc.text(l, M, y); y += 4.5; })); }
+  need(36); y += 8;
+  const sx = W - M - 38;
+  if (r.assinatura) { const sg = await imgData(src(r.assinatura), 600); if (sg) { const h = 20, w = Math.min(60, sg.w * h / sg.h); doc.addImage(sg.data, 'JPEG', sx - w / 2, y, w, h); } }
+  y += 21; doc.setDrawColor(...INK); doc.setLineWidth(.25); doc.line(sx - 38, y, sx + 38, y); y += 4;
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(7.5); doc.setTextColor(...INK); doc.text('Assinatura do Avaliador', sx, y, {align: 'center'}); y += 3.8;
+  doc.setFont('helvetica', 'normal'); doc.text(d.d, sx, y, {align: 'center'});
+  if (r.avaliador) { y += 3.8; doc.text(r.avaliador, sx, y, {align: 'center'}); }
+  footer();
+  return doc.output('blob');
+}
+
+/* ---------- Compartilhar ---------- */
+async function renderCompartilhar() {
+  $('#btn-new').hidden = false;
+  const conc = inspecoes.filter(r => r.status === 'concluida'), rasc = inspecoes.length - conc.length;
+  const e = await usoAparelho();
+  const st = r => { const w = r.compartilhadaEm, o = r.onedriveEm;
+    if (!pendente(r)) return '<span class="st done">✓ ' + (usaOD() ? 'WhatsApp e OneDrive' : 'Enviada') + '</span>';
+    if (w || o) return `<span class="st run">${w ? 'Falta OneDrive' : 'Falta WhatsApp'}</span>`;
+    return '<span class="st wait">Não enviada</span>'; };
+  $('#view').innerHTML = `
+    <div class="head"><div><div class="eyebrow">Celular → WhatsApp${usaOD() ? ' e OneDrive' : ''}</div><h1>Enviar inspeções</h1></div></div>
+    <div class="panel send-hero">
+      <div><b style="font-size:17px" id="c-tit"></b>
+        <p class="muted" style="margin:8px 0 0;font-size:14px;max-width:62ch">Marque as inspeções e toque em <b>Preparar</b>. Depois envie no <b>WhatsApp</b>${usaOD() ? ' e salve no <b>OneDrive</b>, que leva os PDFs para o PC do escritório' : ''}. Vai um PDF completo por inspeção.${rasc ? ` Rascunhos (${rasc}) aparecem aqui quando forem concluídos.` : ''}</p></div>
+      <button class="btn pri lg" type="button" id="b-go" disabled>${ICON.share}Preparar</button>
+    </div>
+    <div id="c-envio"></div>
+    <div class="panel" ${conc.length ? '' : 'hidden'}><div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:4px"><span class="eyebrow">Inspeções concluídas no celular</span><button class="btn ghost sm" type="button" id="c-todas">Marcar todas</button></div>
+      <div class="q">${conc.map(r => { const d = dt(r);
+        return `<div class="qi sel" data-q="${esc(r.id)}"><label><input type="checkbox" value="${esc(r.id)}" ${pendente(r) ? 'checked' : ''}><b>${esc(r.produtor)} · ${esc(r.variedade)}</b>${st(r)}<small class="num">${d.d} ${d.t} · ${esc(r.codigo)} · ${condTexto(r)}</small></label></div>`; }).join('')}</div></div>
+    ${conc.length ? '' : `<div class="panel empty" style="padding:28px"><b>Nenhuma inspeção concluída no celular</b>${enviadas.length ? 'As anteriores já foram enviadas e apagadas.' : 'Conclua uma inspeção para enviar o PDF.'}</div>`}
+    <div class="panel"><div class="eyebrow">Espaço usado pelo app neste celular</div>
+      <div style="display:flex;justify-content:space-between;gap:12px;margin-top:8px;flex-wrap:wrap"><b class="num" style="font-size:20px">${e ? mb(e.usage) : '—'}</b><span class="muted num" style="font-size:13px">${e?.quota ? 'disponível: ' + mb(e.quota) : ''}</span></div>
+      ${e?.quota ? `<div class="meter"><i style="width:${Math.min(100, Math.max(1, e.usage / e.quota * 100))}%"></i></div>` : ''}</div>
+    <div class="panel"><div class="eyebrow" style="margin-bottom:6px">Histórico · enviadas e apagadas do celular</div>
+      ${enviadas.length ? `<div class="q">${enviadas.slice(0, 50).map(x => { const d = dt(x); return `<div class="qi"><b>${esc(x.produtor)} · ${esc(x.variedade)}</b><span class="st done">${esc(x.condicao || '')}</span><small class="num">${d.d} ${d.t} · ${esc(x.codigo)} · enviada ${quando(x.compartilhadaEm || x.enviadoEm)}${x.onedriveEm ? ' · OneDrive ✓' : ''}</small></div>`; }).join('')}</div>`
+        : '<p class="muted" style="margin:0;font-size:14px">Nada ainda. Depois de enviar e apagar, o resumo fica aqui.</p>'}</div>`;
+  const marcadas = () => [...$('#view').querySelectorAll('.qi.sel input:checked')].map(i => inspecoes.find(r => r.id === i.value)).filter(Boolean);
+  const atualizar = () => { $('#c-envio').innerHTML = ''; const n = marcadas().length; const b = $('#b-go'); b.hidden = false;
+    $('#c-tit').textContent = n ? `${n} inspeç${n > 1 ? 'ões selecionadas' : 'ão selecionada'}` : conc.length ? 'Marque as inspeções para enviar' : 'Nada para enviar agora';
+    b.disabled = !n; b.innerHTML = ICON.share + 'Preparar ' + (n > 1 ? n + ' PDFs' : 'PDF'); };
+  $('#view').querySelectorAll('.qi.sel input').forEach(i => i.onchange = atualizar);
+  const t = $('#c-todas'); if (t) t.onclick = () => { $('#view').querySelectorAll('.qi.sel input').forEach(i => i.checked = true); atualizar(); };
+  atualizar();
+  $('#b-go').onclick = async () => {
+    const b = $('#b-go'); if (ocupado) return;
+    const sel = marcadas(); if (!sel.length) return;
+    ocupado = true; b.disabled = true; const files = [];
+    try {
+      for (let i = 0; i < sel.length; i++) { b.textContent = `Preparando ${i + 1} de ${sel.length}…`; await preUrls(sel[i]); files.push(await pdfDe(sel[i])); }
+      b.hidden = true; $('#c-tit').textContent = sel.length > 1 ? `${sel.length} PDFs prontos` : 'PDF pronto';
+      montarEnvio($('#c-envio'), sel, files); $('#c-envio').scrollIntoView({behavior: 'smooth', block: 'nearest'});
+    } catch (e) { toast('Não foi possível gerar o PDF: ' + (e?.message || 'erro')); atualizar(); }
+    finally { ocupado = false; b.disabled = false; }
+  };
+}
+function condTexto(r) { return esc(r.parecer?.condicao || 'sem parecer'); }
+
+/* ---------- Configurações ---------- */
+function renderConfig() {
+  $('#btn-new').hidden = false;
+  $('#view').innerHTML = `
+    <div class="head"><div><div class="eyebrow">Este celular</div><h1>Configurações</h1></div></div>
+    <div class="panel"><div class="cfg">
+      <div class="f"><label for="c-aval">Avaliador padrão</label><input class="in" id="c-aval" autocomplete="off" placeholder="Seu nome" value="${esc(cfg.avaliador || '')}">
+        <span class="muted" style="font-size:13px">Já vem preenchido em cada nova inspeção.</span></div>
+      <label style="display:flex;gap:10px;align-items:flex-start;cursor:pointer"><input type="checkbox" id="c-od" ${usaOD() ? 'checked' : ''} style="width:20px;height:20px;accent-color:var(--brand);margin-top:2px">
+        <span><b>Salvar também no OneDrive (opcional)</b><br><span class="muted" style="font-size:13px">Desligado: o envio é só pelo WhatsApp. Ligue se um dia quiserem que os PDFs caiam sozinhos no PC pelo OneDrive.</span></span></label>
+      <div><button class="btn pri" type="button" id="c-save">Salvar</button></div>
+    </div></div>
+    <div class="panel" ${usaOD() ? '' : 'hidden'}><div class="eyebrow" style="margin-bottom:10px">OneDrive neste celular</div>
+      <ol class="howto"><li>Instale o app <b>Microsoft OneDrive</b> e entre com a conta da empresa.</li><li>Na primeira vez, ao tocar em <b>Salvar no OneDrive</b>, escolha <b>OneDrive</b> no menu e a pasta <b>Inspeções Recepção</b>.</li><li>No PC do escritório, a mesma pasta aparece dentro do OneDrive e os PDFs chegam sozinhos.</li></ol></div>
+    <div class="panel"><div class="eyebrow" style="margin-bottom:10px">Instalar na tela inicial</div>
+      <ol class="howto"><li><b>Android (Chrome):</b> menu ⋮ → <b>Adicionar à tela inicial</b> → Instalar.</li><li><b>iPhone (Safari):</b> botão Compartilhar → <b>Adicionar à Tela de Início</b>.</li><li>Depois abra sempre pelo ícone <b>Recepção L9</b>. Funciona sem internet; só o envio pelo WhatsApp precisa de conexão.</li></ol>
+      <p class="muted" style="font-size:13px;margin:10px 0 0">${instalado() ? 'Este app já está instalado neste celular.' : 'Ainda aberto pelo navegador.'}</p></div>
+    <div class="panel"><div class="eyebrow" style="margin-bottom:8px">Versão do app</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap"><b class="num" style="font-size:18px">${VERSAO_APP} · ${VERSAO_DATA}</b>
+      <button class="btn sm" type="button" id="c-upd">Procurar atualização</button></div>
+      <p class="muted" style="font-size:13px;margin:8px 0 0">Quando houver versão nova, aparece um aviso laranja no topo com o botão <b>Atualizar agora</b>.</p></div>`;
+  $('#c-upd').onclick = async () => { const b = $('#c-upd'); b.disabled = true; b.textContent = 'Procurando…';
+    const tem = await (window.__checarAtualizacao ? window.__checarAtualizacao() : Promise.resolve(false));
+    b.disabled = false; b.textContent = 'Procurar atualização';
+    toast(tem ? 'Versão nova encontrada. Toque em Atualizar agora, no topo.' : navigator.onLine ? 'Você já está na versão mais nova.' : 'Sem internet agora. Tente de novo com conexão.', 3500); };
+  $('#c-save').onclick = async () => { cfg.avaliador = $('#c-aval').value.trim(); cfg.onedrive = $('#c-od').checked; await salvarCfg(); await carregar(); toast('Configurações salvas'); renderConfig(); };
+}
+
+/* ---------- Atualizações do app ---------- */
+async function iniciarAtualizacoes() {
+  if (!('serviceWorker' in navigator)) return;
+  let reg;
+  try { reg = await navigator.serviceWorker.register('sw.js'); } catch { return; }
+  const aviso = $('#upd');
+  const mostrar = () => { if (reg.waiting && navigator.serviceWorker.controller) aviso.hidden = false; };
+  mostrar();
+  reg.addEventListener('updatefound', () => { const w = reg.installing; if (w) w.addEventListener('statechange', () => { if (w.state === 'installed') mostrar(); }); });
+  const checar = () => reg.update().catch(() => {});
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') checar(); });
+  setInterval(checar, 30 * 60 * 1000);
+  let recarregando = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => { if (recarregando) return; recarregando = true; location.reload(); });
+  $('#upd-btn').onclick = async () => {
+    if (editing && editing.status === 'concluida' && editing.__dirty) return toast('Salve a inspeção antes de atualizar.', 3500);
+    if (editing && editing.__dirty) { clearTimeout(autoT); try { await salvar(editing, false); } catch {} }
+    const b = $('#upd-btn'); b.disabled = true; b.textContent = 'Atualizando…';
+    if (reg.waiting) reg.waiting.postMessage('atualizar'); else location.reload();
+  };
+  window.__checarAtualizacao = async () => { await checar(); await new Promise(r => setTimeout(r, 1500)); mostrar(); return !!reg.waiting || !!reg.installing; };
+}
+
+/* ---------- Início ---------- */
+(async () => {
+  try { await openDB(); } catch (e) { $('#view').innerHTML = '<div class="empty"><b>Não foi possível abrir o armazenamento do celular</b>Feche o modo anônimo ou libere espaço e abra de novo.</div>'; return; }
+  try { if (navigator.storage?.persist && !(await navigator.storage.persisted())) await navigator.storage.persist(); } catch {}
+  await carregar(); await limparOrfas(); route();
+  iniciarAtualizacoes();
+})();
+})();
+</script>
+</body>
+</html>
